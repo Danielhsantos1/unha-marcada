@@ -18,11 +18,20 @@ Supabase — cada seção explica o "porquê", não só o "como".
 - ✅ Reserva de horário por 15 minutos com expiração automática
 - ✅ Design responsivo (mobile first) com a paleta rosa claro/nude
 
-**Ainda não incluído nesta entrega (próximas fases, combinadas com você):**
+**Fase 2 — Dashboard administrativo (concluída):**
 
-- ⏳ Fase 2: Dashboard administrativo (login, gestão de agenda/serviços,
-  bloqueio de horários, cancelamento, clientes)
-- ⏳ Fase 3: Relatórios e notificações via WhatsApp
+- ✅ Login por salão (`/[slug]/admin/login`) com Supabase Auth
+- ✅ Dashboard com cards (agendamentos hoje, receita prevista, sinais
+  recebidos, clientes novas)
+- ✅ Agenda em 3 visualizações (dia/semana/mês) com as cores do briefing,
+  cancelamento e conclusão de agendamentos
+- ✅ CRUD de serviços, listagem de pagamentos e de clientes
+- ✅ Configurações: horário de funcionamento semanal e bloqueio de horários
+
+**Ainda não incluído nesta entrega (próxima fase, combinada com você):**
+
+- ⏳ Fase 3: Relatórios (o menu já existe, com uma tela "em breve") e
+  notificações via WhatsApp
 
 O banco de dados (tabelas `profiles`, `blocked_dates`, colunas de
 cancelamento, etc.) já foi desenhado pensando nessas fases futuras, então
@@ -81,6 +90,15 @@ src/
     [slug]/page.tsx                   → página pública de um salão
     [slug]/agendar/page.tsx           → wizard de agendamento (passos 1-5)
     [slug]/agendamento/[id]/page.tsx  → tela de PIX / status (passo 6)
+    [slug]/admin/                     → painel administrativo (Fase 2)
+      login/page.tsx                  → login do salão
+      page.tsx                        → dashboard (cards)
+      agenda/                         → visualização dia/semana/mês
+      servicos/                       → CRUD de serviços
+      pagamentos/                     → listagem de pagamentos
+      clientes/                       → listagem agregada de clientes
+      configuracoes/                  → horários semanais + bloqueio de datas
+      relatorios/                     → placeholder (conteúdo real na Fase 3)
     api/appointments/route.ts               → cria agendamento + cobrança PIX
     api/appointments/[id]/status/route.ts   → consulta status (polling)
     api/tenants/[slug]/slots/route.ts       → horários disponíveis de um dia
@@ -173,7 +191,38 @@ Outras decisões deliberadas, para você não achar que é "esquecimento":
 
 ---
 
-## 7. Passo a passo: Mercado Pago (PIX)
+## 7. Criando seu primeiro login de administrador
+
+O painel administrativo (`/[slug]/admin`) usa o Supabase Auth. Ainda não
+existe uma tela de "criar conta" pelo próprio painel — a Fase 2 assume que
+você (o dono da plataforma) cria a primeira conta de cada salão
+manualmente. É rápido:
+
+1. No painel do Supabase: **Authentication → Users → Add user** → crie um
+   usuário com e-mail e senha (marque "Auto Confirm User" para não precisar
+   confirmar por e-mail). Copie o **User UID** gerado.
+2. No **SQL Editor**, rode (trocando o UID e o nome):
+   ```sql
+   insert into profiles (id, tenant_id, role, full_name)
+   values (
+     '<user-uid-copiado>',
+     '00000000-0000-0000-0000-000000000001', -- id do studio-nude (seed)
+     'owner',
+     'Seu Nome'
+   );
+   ```
+3. Acesse `/studio-nude/admin/login` e entre com esse e-mail/senha.
+
+Por que não existe uma tela de cadastro pública ainda: qualquer pessoa
+poder criar uma conta de admin para qualquer salão é uma porta aberta para
+abuso — antes de construir isso, a Fase 3+ precisaria de um fluxo de
+convite (o dono do salão convida a equipe) ou de um processo de aprovação
+para novos salões entrarem na plataforma. Por enquanto, a tabela
+`profiles` já está pronta para isso (coluna `role`: `owner`/`admin`/`staff`).
+
+---
+
+## 8. Passo a passo: Mercado Pago (PIX)
 
 1. Crie uma conta em [mercadopago.com.br](https://www.mercadopago.com.br)
    e acesse o [painel de desenvolvedores](https://www.mercadopago.com.br/developers/panel).
@@ -194,10 +243,10 @@ Outras decisões deliberadas, para você não achar que é "esquecimento":
 
 ---
 
-## 8. Variáveis de ambiente
+## 9. Variáveis de ambiente
 
 Copie `.env.example` para `.env.local` e preencha os valores dos passos
-6 e 7:
+6 e 8:
 
 ```bash
 cp .env.example .env.local
@@ -205,7 +254,7 @@ cp .env.example .env.local
 
 ---
 
-## 9. Rodando localmente
+## 10. Rodando localmente
 
 ```bash
 npm install
@@ -217,10 +266,12 @@ Acesse:
 - `http://localhost:3000` — landing da plataforma
 - `http://localhost:3000/studio-nude` — página pública do salão de demonstração
 - `http://localhost:3000/studio-nude/agendar` — fluxo de agendamento
+- `http://localhost:3000/studio-nude/admin/login` — painel administrativo
+  (veja a seção 7 para criar seu primeiro login)
 
 ---
 
-## 10. Deploy na Vercel
+## 11. Deploy na Vercel
 
 1. Importe o repositório na Vercel.
 2. Em **Settings → Environment Variables**, cadastre todas as variáveis do
@@ -239,14 +290,12 @@ Acesse:
 
 ---
 
-## 11. Roadmap combinado
+## 12. Roadmap combinado
 
-- **Fase 2 — Dashboard administrativo:** login (Supabase Auth + tabela
-  `profiles`), gestão de agenda (dia/semana/mês com as cores definidas no
-  briefing), gestão de serviços, bloqueio de horários, cancelamento,
-  listagem de clientes e pagamentos.
+- ~~**Fase 2 — Dashboard administrativo**~~ ✅ concluída.
 - **Fase 3 — Relatórios e notificações:** métricas mensais/semanais,
+  serviços mais vendidos, clientes recorrentes, taxa de cancelamento,
   integração de envio de WhatsApp (confirmação de pagamento + lembrete
   24h antes).
 
-Peça para eu continuar com a Fase 2 quando quiser seguir em frente.
+Peça para eu continuar com a Fase 3 quando quiser seguir em frente.
