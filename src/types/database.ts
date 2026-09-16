@@ -112,6 +112,14 @@ export interface Payment {
   updated_at: string;
 }
 
+export interface TenantPaymentCredentials {
+  tenant_id: string;
+  mercadopago_access_token: string;
+  mercadopago_webhook_secret: string;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface AppointmentWithRelations extends Appointment {
   service: Service;
   tenant: Tenant;

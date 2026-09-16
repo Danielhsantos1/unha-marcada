@@ -224,16 +224,28 @@ para novos salões entrarem na plataforma. Por enquanto, a tabela
 
 ## 8. Passo a passo: Mercado Pago (PIX)
 
+Cada salão recebe o sinal PIX diretamente na própria conta do Mercado
+Pago — a plataforma nunca fica com o dinheiro no meio do caminho. Por
+isso não existe uma credencial global em `.env`: cada tenant cadastra a
+própria conta pelo painel administrativo, em **Configurações → Recebimento
+de pagamentos**.
+
+Passo a passo que o **dono do salão** (ou você, ajudando-o) segue:
+
 1. Crie uma conta em [mercadopago.com.br](https://www.mercadopago.com.br)
    e acesse o [painel de desenvolvedores](https://www.mercadopago.com.br/developers/panel).
-2. Crie uma aplicação. Em **Credenciais de teste**, copie o
-   **Access Token de teste** → variável `MERCADOPAGO_ACCESS_TOKEN`
-   (comece sempre em modo teste antes de ir para produção).
+2. Crie uma aplicação. Em **Credenciais de produção**, copie o
+   **Access Token** (comece em modo teste, com as credenciais de teste,
+   para validar o fluxo antes de ir ao ar com dinheiro de verdade).
 3. Configure o **Webhook**: em **Webhooks → Configurar notificações**,
    cadastre a URL `https://SEU-DOMINIO/api/webhooks/mercadopago` e marque
-   o evento **Pagamentos**. O painel vai gerar uma **Assinatura secreta** →
-   variável `MERCADOPAGO_WEBHOOK_SECRET`.
-4. **Testando localmente**: o Mercado Pago precisa alcançar sua máquina
+   o evento **Pagamentos**. O painel vai gerar uma **Assinatura secreta**.
+4. No painel administrativo do sistema
+   (`/SEU-SALAO/admin/configuracoes`), cole o **Access Token** e a
+   **Assinatura secreta** no card "Recebimento de pagamentos" e salve.
+   A partir daí, todo PIX gerado para esse salão usa essas credenciais —
+   nenhuma variável de ambiente precisa ser alterada por tenant.
+5. **Testando localmente**: o Mercado Pago precisa alcançar sua máquina
    pela internet para enviar o webhook. Use um túnel, por exemplo:
    ```bash
    npx ngrok http 3000
@@ -245,8 +257,9 @@ para novos salões entrarem na plataforma. Por enquanto, a tabela
 
 ## 9. Variáveis de ambiente
 
-Copie `.env.example` para `.env.local` e preencha os valores dos passos
-6 e 8:
+Copie `.env.example` para `.env.local` e preencha os valores do passo 6
+(Supabase). As credenciais do Mercado Pago **não** entram aqui — cada
+salão cadastra as próprias pelo painel administrativo (passo 8):
 
 ```bash
 cp .env.example .env.local
@@ -275,8 +288,9 @@ Acesse:
 
 1. Importe o repositório na Vercel.
 2. Em **Settings → Environment Variables**, cadastre todas as variáveis do
-   `.env.example` (use as credenciais de produção do Supabase e do
-   Mercado Pago quando estiver pronto para ir ao ar).
+   `.env.example` (use as credenciais de produção do Supabase). As
+   credenciais do Mercado Pago de cada salão são cadastradas depois, pelo
+   próprio painel administrativo (passo 8) — não são variáveis de ambiente.
 3. O arquivo `vercel.json` já configura um **Cron Job** que chama
    `/api/cron/expire-holds` uma vez por dia (03:00 UTC) para liberar horários
    cuja reserva de 15 minutos expirou.
