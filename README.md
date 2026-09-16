@@ -191,34 +191,64 @@ Outras decisões deliberadas, para você não achar que é "esquecimento":
 
 ---
 
-## 7. Criando seu primeiro login de administrador
+## 7. Criando um novo salão (tenant)
 
-O painel administrativo (`/[slug]/admin`) usa o Supabase Auth. Ainda não
-existe uma tela de "criar conta" pelo próprio painel — a Fase 2 assume que
-você (o dono da plataforma) cria a primeira conta de cada salão
-manualmente. É rápido:
+### 7.1 Pelo painel mestre (recomendado)
 
-1. No painel do Supabase: **Authentication → Users → Add user** → crie um
+`/painel-mestre` é uma tela interna — só você acessa — que cria o salão, o
+login da responsável e o vínculo entre os dois em um clique, sem precisar
+abrir o SQL Editor.
+
+1. No `.env.local` (e nas variáveis de ambiente da Vercel), defina
+   `PLATFORM_ADMIN_EMAILS` com o e-mail da sua própria conta (a mesma que
+   você já usa para logar em qualquer `/[slug]/admin` — é o mesmo banco de
+   usuários do Supabase Auth, não precisa criar uma conta nova).
+2. Acesse `/painel-mestre/login` e entre com esse e-mail/senha.
+3. Preenche o formulário "Novo salão": nome, slug, telefone/cor
+   (opcionais), nome e e-mail da responsável. Ao salvar, o sistema:
+   - cria a linha em `tenants`,
+   - cria o login da responsável no Supabase Auth com uma senha temporária
+     gerada na hora,
+   - vincula os dois em `profiles` com `role = 'owner'`.
+4. A tela mostra o link de login, o e-mail e a senha temporária **uma
+   única vez** — copia e repassa pra responsável (WhatsApp, e-mail, o que
+   for). Se qualquer etapa falhar no meio do caminho, o que já foi criado
+   é desfeito automaticamente, então não sobra salão "pela metade" no
+   banco.
+
+### 7.2 Manualmente (SQL Editor)
+
+Sem o `/painel-mestre` configurado (ou pra entender o que ele automatiza
+por baixo dos panos):
+
+1. No **SQL Editor** do Supabase:
+   ```sql
+   insert into tenants (slug, name, phone, primary_color)
+   values ('nome-do-salao', 'Nome do Salão', '11999999999', '#D9A5B3');
+   ```
+2. No painel do Supabase: **Authentication → Users → Add user** → crie um
    usuário com e-mail e senha (marque "Auto Confirm User" para não precisar
    confirmar por e-mail). Copie o **User UID** gerado.
-2. No **SQL Editor**, rode (trocando o UID e o nome):
+3. No **SQL Editor**, rode (trocando o UID e o nome):
    ```sql
    insert into profiles (id, tenant_id, role, full_name)
    values (
      '<user-uid-copiado>',
-     '00000000-0000-0000-0000-000000000001', -- id do studio-nude (seed)
+     (select id from tenants where slug = 'nome-do-salao'),
      'owner',
-     'Seu Nome'
+     'Nome da Responsável'
    );
    ```
-3. Acesse `/studio-nude/admin/login` e entre com esse e-mail/senha.
+4. Acesse `/nome-do-salao/admin/login` e entre com esse e-mail/senha.
 
-Por que não existe uma tela de cadastro pública ainda: qualquer pessoa
-poder criar uma conta de admin para qualquer salão é uma porta aberta para
-abuso — antes de construir isso, a Fase 3+ precisaria de um fluxo de
-convite (o dono do salão convida a equipe) ou de um processo de aprovação
-para novos salões entrarem na plataforma. Por enquanto, a tabela
-`profiles` já está pronta para isso (coluna `role`: `owner`/`admin`/`staff`).
+Por que não existe uma tela de cadastro **pública**: qualquer pessoa poder
+criar uma conta de admin para qualquer salão é uma porta aberta para
+abuso — `/painel-mestre` resolve a parte operacional (você não digita SQL
+à mão), mas continua sendo você quem decide criar cada salão, não um
+formulário de auto-cadastro aberto. Antes de abrir isso ao público, a
+Fase 3+ precisaria de um fluxo de convite ou aprovação. Por enquanto, a
+tabela `profiles` já está pronta pra isso (coluna `role`:
+`owner`/`admin`/`staff`).
 
 ---
 
