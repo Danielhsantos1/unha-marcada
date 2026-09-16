@@ -33,6 +33,13 @@ export const PAYMENT_STATUS_LABELS: Record<PaymentStatus, string> = {
   REFUNDED: "Reembolsado",
 };
 
+export const PAYMENT_STATUS_COLORS: Record<PaymentStatus, string> = {
+  PENDING: "bg-amber-100 text-amber-800 border-amber-300",
+  PAID: "bg-emerald-100 text-emerald-800 border-emerald-300",
+  FAILED: "bg-red-100 text-red-800 border-red-300",
+  REFUNDED: "bg-neutral-200 text-neutral-600 border-neutral-300",
+};
+
 export const WEEKDAY_LABELS = [
   "Domingo",
   "Segunda",
