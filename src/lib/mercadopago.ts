@@ -2,14 +2,6 @@ import "server-only";
 import crypto from "node:crypto";
 import { MercadoPagoConfig, Payment } from "mercadopago";
 
-function getClient(): MercadoPagoConfig {
-  const accessToken = process.env.MERCADOPAGO_ACCESS_TOKEN;
-  if (!accessToken) {
-    throw new Error("MERCADOPAGO_ACCESS_TOKEN não configurado.");
-  }
-  return new MercadoPagoConfig({ accessToken });
-}
-
 export interface CreatePixPaymentInput {
   amountCents: number;
   description: string;
@@ -38,10 +30,17 @@ function resolvePayerEmail(email: string | undefined, phone: string): string {
   return `cliente-${digits}@sem-email.booking`;
 }
 
+/**
+ * Every call takes the tenant's OWN Mercado Pago access token — there is no
+ * global/platform credential. Each salon connects its own Mercado Pago
+ * account (see tenant_payment_credentials) so PIX deposits land directly in
+ * its account, never in the platform's.
+ */
 export async function createPixPayment(
   input: CreatePixPaymentInput & { payerPhone: string },
+  accessToken: string,
 ): Promise<CreatePixPaymentResult> {
-  const payment = new Payment(getClient());
+  const payment = new Payment(new MercadoPagoConfig({ accessToken }));
 
   const result = await payment.create({
     body: {
@@ -70,8 +69,8 @@ export async function createPixPayment(
   };
 }
 
-export async function getPaymentStatus(providerPaymentId: string) {
-  const payment = new Payment(getClient());
+export async function getPaymentStatus(providerPaymentId: string, accessToken: string) {
+  const payment = new Payment(new MercadoPagoConfig({ accessToken }));
   return payment.get({ id: providerPaymentId });
 }
 
@@ -79,14 +78,17 @@ export async function getPaymentStatus(providerPaymentId: string) {
  * Validates the `x-signature` header Mercado Pago sends on every webhook
  * call, per https://www.mercadopago.com.br/developers/en/docs/checkout-api/webhooks#editor_5
  * Without this, anyone could POST a fake "payment approved" event.
+ *
+ * The secret is per-tenant: each salon's own Mercado Pago application has
+ * its own webhook signing secret, generated in its own developer panel.
  */
 export function verifyWebhookSignature(params: {
   xSignature: string | null;
   xRequestId: string | null;
   dataId: string | null;
+  secret: string;
 }): boolean {
-  const secret = process.env.MERCADOPAGO_WEBHOOK_SECRET;
-  if (!secret || !params.xSignature || !params.xRequestId || !params.dataId) {
+  if (!params.secret || !params.xSignature || !params.xRequestId || !params.dataId) {
     return false;
   }
 
@@ -102,7 +104,7 @@ export function verifyWebhookSignature(params: {
   if (!ts || !receivedHash) return false;
 
   const manifest = `id:${params.dataId.toLowerCase()};request-id:${params.xRequestId};ts:${ts};`;
-  const expectedHash = crypto.createHmac("sha256", secret).update(manifest).digest("hex");
+  const expectedHash = crypto.createHmac("sha256", params.secret).update(manifest).digest("hex");
   const expectedBuffer = Buffer.from(expectedHash);
   const receivedBuffer = Buffer.from(receivedHash);
 

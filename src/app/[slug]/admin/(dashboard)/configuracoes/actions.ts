@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { requireTenantStaff } from "@/lib/admin/auth";
 import { blockedDateFormSchema } from "@/lib/validations/blocked-date";
+import { paymentSettingsFormSchema } from "@/lib/validations/payment-settings";
 
 export interface AvailabilityRowInput {
   dayOfWeek: number;
@@ -70,6 +71,25 @@ export async function deleteBlockedDateAction(slug: string, blockId: string) {
 
   const { error } = await supabase.from("blocked_dates").delete().eq("id", blockId);
   if (error) return { error: "Não foi possível remover o bloqueio." };
+
+  revalidatePath(`/${slug}/admin/configuracoes`);
+  return { error: null };
+}
+
+export async function savePaymentCredentialsAction(slug: string, formData: unknown) {
+  const parsed = paymentSettingsFormSchema.safeParse(formData);
+  if (!parsed.success) return { error: "Dados inválidos." };
+
+  const { tenant } = await requireTenantStaff(slug);
+  const supabase = await createClient();
+
+  const { error } = await supabase.from("tenant_payment_credentials").upsert({
+    tenant_id: tenant.id,
+    mercadopago_access_token: parsed.data.mercadopagoAccessToken,
+    mercadopago_webhook_secret: parsed.data.mercadopagoWebhookSecret,
+  });
+
+  if (error) return { error: "Não foi possível salvar as credenciais." };
 
   revalidatePath(`/${slug}/admin/configuracoes`);
   return { error: null };

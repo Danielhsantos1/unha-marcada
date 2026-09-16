@@ -6,7 +6,7 @@ import { getAvailableSlots, timeStringToMinutes, minutesToTimeString } from "@/l
 import { createPixPayment } from "@/lib/mercadopago";
 import { checkRateLimit, getClientIp } from "@/lib/rate-limit";
 import { HOLD_DURATION_MINUTES } from "@/lib/constants";
-import type { Service, Tenant } from "@/types/database";
+import type { Service, Tenant, TenantPaymentCredentials } from "@/types/database";
 
 export async function POST(request: Request) {
   const ip = getClientIp(request);
@@ -44,6 +44,19 @@ export async function POST(request: Request) {
 
   if (!tenant) {
     return NextResponse.json({ error: "Salão não encontrado." }, { status: 404 });
+  }
+
+  const { data: credentials } = await supabase
+    .from("tenant_payment_credentials")
+    .select("mercadopago_access_token")
+    .eq("tenant_id", tenant.id)
+    .maybeSingle<Pick<TenantPaymentCredentials, "mercadopago_access_token">>();
+
+  if (!credentials) {
+    return NextResponse.json(
+      { error: "Este salão ainda não configurou o recebimento de pagamentos." },
+      { status: 503 },
+    );
   }
 
   const { data: service } = await supabase
@@ -125,7 +138,7 @@ export async function POST(request: Request) {
       payerPhone: input.clientPhone,
       externalReference: appointment.id,
       notificationUrl: `${siteUrl}/api/webhooks/mercadopago`,
-    });
+    }, credentials.mercadopago_access_token);
 
     const { error: paymentError } = await supabase.from("payments").insert({
       tenant_id: tenant.id,
