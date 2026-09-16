@@ -44,3 +44,31 @@ export async function requireTenantStaff(
 
   return { tenant, profile };
 }
+
+/**
+ * Guards /painel-mestre, the internal tool used to onboard new salons.
+ * There's no tenant here — access is decided purely by whether the
+ * logged-in user's email is in PLATFORM_ADMIN_EMAILS (comma-separated),
+ * since this is a single-operator platform, not a per-tenant role.
+ */
+export async function requirePlatformAdmin(): Promise<{ email: string }> {
+  const supabase = await createClient();
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) redirect("/painel-mestre/login");
+
+  const allowedEmails = (process.env.PLATFORM_ADMIN_EMAILS ?? "")
+    .split(",")
+    .map((email) => email.trim().toLowerCase())
+    .filter(Boolean);
+
+  if (!user.email || !allowedEmails.includes(user.email.toLowerCase())) {
+    await supabase.auth.signOut();
+    redirect("/painel-mestre/login?erro=sem_acesso");
+  }
+
+  return { email: user.email };
+}
