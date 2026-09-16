@@ -278,13 +278,15 @@ Acesse:
    `.env.example` (use as credenciais de produção do Supabase e do
    Mercado Pago quando estiver pronto para ir ao ar).
 3. O arquivo `vercel.json` já configura um **Cron Job** que chama
-   `/api/cron/expire-holds` a cada 5 minutos para liberar horários cuja
-   reserva de 15 minutos expirou.
-   > Nota: no plano gratuito (Hobby) da Vercel, cron jobs muito frequentes
-   > podem ter restrições. Isso não quebra a regra de negócio: a função
-   > `getAvailableSlots` já ignora reservas expiradas na hora de calcular
-   > horários livres, então o cron serve para "limpar" o status no banco,
-   > não é a única linha de defesa.
+   `/api/cron/expire-holds` uma vez por dia (03:00 UTC) para liberar horários
+   cuja reserva de 15 minutos expirou.
+   > Nota: o plano gratuito (Hobby) da Vercel só permite cron jobs com
+   > frequência **diária** — por isso não roda a cada 5 minutos. Isso não
+   > quebra a regra de negócio: a função `getAvailableSlots` já ignora
+   > reservas expiradas na hora de calcular horários livres, então o cron
+   > só serve para "limpar" o status no banco depois. Se um dia você migrar
+   > para o plano Pro, pode voltar o schedule para `*/5 * * * *` em
+   > `vercel.json` para essa limpeza acontecer mais perto do tempo real.
 4. Depois do primeiro deploy, atualize `NEXT_PUBLIC_SITE_URL` com o domínio
    final e reconfigure a URL do webhook no painel do Mercado Pago.
 
