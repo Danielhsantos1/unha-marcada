@@ -22,13 +22,14 @@ export function PixPanel({
 
   return (
     <div className="flex flex-col items-center gap-4">
-      <div className="rounded-2xl border border-neutral-200 bg-white p-4">
+      <div className="w-full max-w-[252px] rounded-2xl border border-neutral-200 bg-white p-4">
         <Image
           src={`data:image/png;base64,${qrCodeBase64}`}
           alt="QR Code PIX"
           width={220}
           height={220}
           unoptimized
+          className="h-auto w-full"
         />
       </div>
 

@@ -120,7 +120,7 @@ export function ServiceFormDialog({ slug, service }: { slug: string; service?: S
             <Textarea id="description" {...register("description")} />
           </div>
 
-          <div className="grid grid-cols-3 gap-3">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
             <div className="flex flex-col gap-1.5">
               <Label htmlFor="price">Preço (R$)</Label>
               <Input id="price" type="number" step="0.01" min="0" {...register("price")} />
