@@ -30,7 +30,7 @@ export function CompleteAppointmentButton({
     <Button
       variant="ghost"
       size="icon"
-      className="h-7 w-7 text-neutral-400 hover:text-blue-600"
+      className="h-10 w-10 text-neutral-400 hover:text-blue-600"
       onClick={handleClick}
       disabled={isPending}
     >

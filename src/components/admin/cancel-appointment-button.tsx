@@ -42,7 +42,7 @@ export function CancelAppointmentButton({
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button variant="ghost" size="icon" className="h-7 w-7 text-neutral-400 hover:text-red-600">
+        <Button variant="ghost" size="icon" className="h-10 w-10 text-neutral-400 hover:text-red-600">
           <X className="h-4 w-4" />
         </Button>
       </DialogTrigger>

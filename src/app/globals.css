@@ -44,8 +44,17 @@
   --color-nude-300: var(--raw-nude-300);
 }
 
+html,
 body {
   background: var(--background);
   color: var(--foreground);
   font-family: var(--font-sans), ui-sans-serif, system-ui, sans-serif;
+  /* Safety net: a wide flex/grid child anywhere on the page (a table, a
+     nav row, a calendar) can force the whole document wider than the
+     viewport, and mobile browsers respond by silently scrolling the
+     entire page sideways — nav bar, cards and all — instead of just the
+     one element that's actually too wide. This guarantees that never
+     happens; elements that legitimately need horizontal scroll (Table,
+     the week view) still scroll fine on their own overflow-x-auto. */
+  overflow-x: hidden;
 }
