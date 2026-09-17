@@ -1,5 +1,6 @@
 import { requireTenantStaff } from "@/lib/admin/auth";
 import { AdminNav } from "@/components/admin/admin-nav";
+import { MobileNav } from "@/components/admin/mobile-nav";
 import { LogoutButton } from "@/components/admin/logout-button";
 
 export default async function AdminLayout({
@@ -26,14 +27,16 @@ export default async function AdminLayout({
         </div>
       </aside>
 
-      <div className="flex flex-1 flex-col">
-        <header className="flex items-center justify-between border-b border-neutral-200 bg-white px-4 py-3 md:hidden">
-          <span className="text-sm font-semibold text-neutral-900">{tenant.name}</span>
+      <div className="flex min-w-0 flex-1 flex-col">
+        <header className="flex items-center justify-between gap-2 border-b border-neutral-200 bg-white px-2 py-2 md:hidden">
+          <div className="flex min-w-0 items-center gap-1">
+            <MobileNav slug={slug} tenantName={tenant.name} />
+            <span className="truncate text-sm font-semibold text-neutral-900">{tenant.name}</span>
+          </div>
           <LogoutButton slug={slug} />
         </header>
-        <AdminNav slug={slug} className="flex gap-1 overflow-x-auto border-b border-neutral-200 bg-white px-3 py-2 md:hidden" />
 
-        <main className="flex-1 p-4 sm:p-6">{children}</main>
+        <main className="min-w-0 flex-1 p-4 sm:p-6">{children}</main>
       </div>
     </div>
   );

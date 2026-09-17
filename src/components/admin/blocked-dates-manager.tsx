@@ -99,7 +99,7 @@ export function BlockedDatesManager({ slug, blockedDates }: { slug: string; bloc
               <Button
                 variant="ghost"
                 size="icon"
-                className="h-8 w-8 text-neutral-400 hover:text-red-600"
+                className="h-10 w-10 shrink-0 text-neutral-400 hover:text-red-600"
                 onClick={() => handleDelete(block.id)}
                 disabled={isPending}
               >

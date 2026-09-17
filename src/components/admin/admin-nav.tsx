@@ -2,36 +2,15 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import {
-  LayoutDashboard,
-  CalendarDays,
-  Users,
-  Sparkles,
-  Wallet,
-  BarChart3,
-  Settings,
-} from "lucide-react";
+import { adminNavItems } from "@/lib/admin/nav-items";
 import { cn } from "@/lib/utils";
-
-function navItems(slug: string) {
-  const base = `/${slug}/admin`;
-  return [
-    { href: base, label: "Dashboard", icon: LayoutDashboard, exact: true },
-    { href: `${base}/agenda`, label: "Agenda", icon: CalendarDays },
-    { href: `${base}/clientes`, label: "Clientes", icon: Users },
-    { href: `${base}/servicos`, label: "Serviços", icon: Sparkles },
-    { href: `${base}/pagamentos`, label: "Pagamentos", icon: Wallet },
-    { href: `${base}/relatorios`, label: "Relatórios", icon: BarChart3 },
-    { href: `${base}/configuracoes`, label: "Configurações", icon: Settings },
-  ];
-}
 
 export function AdminNav({ slug, className }: { slug: string; className?: string }) {
   const pathname = usePathname();
 
   return (
     <nav className={className}>
-      {navItems(slug).map(({ href, label, icon: Icon, exact }) => {
+      {adminNavItems(slug).map(({ href, label, icon: Icon, exact }) => {
         const isActive = exact ? pathname === href : pathname.startsWith(href);
         return (
           <Link
