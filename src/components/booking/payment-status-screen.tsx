@@ -55,7 +55,7 @@ export function PaymentStatusScreen({ appointmentId }: { appointmentId: string }
   const [cancelOpen, setCancelOpen] = useState(false);
   const [isCancelling, setIsCancelling] = useState(false);
   const [rescheduleOpen, setRescheduleOpen] = useState(false);
-  const [rescheduleStep, setRescheduleStep] = useState<1 | 2>(1);
+  const [rescheduleStep, setRescheduleStep] = useState<1 | 2 | "done">(1);
   const [rescheduleDate, setRescheduleDate] = useState<string | null>(null);
   const [rescheduleTime, setRescheduleTime] = useState<string | null>(null);
   const [isRescheduling, setIsRescheduling] = useState(false);
@@ -88,7 +88,7 @@ export function PaymentStatusScreen({ appointmentId }: { appointmentId: string }
       const response = await fetch(`/api/appointments/${appointmentId}/cancel`, {
         method: "POST",
       });
-      const result = await response.json();
+      const result = await response.json().catch(() => ({}) as { error?: string });
       if (!response.ok) {
         toast.error(result.error ?? "Não foi possível cancelar.");
         return;
@@ -96,6 +96,8 @@ export function PaymentStatusScreen({ appointmentId }: { appointmentId: string }
       toast.success("Agendamento cancelado.");
       setCancelOpen(false);
       refresh();
+    } catch {
+      toast.error("Algo deu errado. Verifique sua internet e tente novamente.");
     } finally {
       setIsCancelling(false);
     }
@@ -117,14 +119,18 @@ export function PaymentStatusScreen({ appointmentId }: { appointmentId: string }
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ date: rescheduleDate, time: rescheduleTime }),
       });
-      const result = await response.json();
+      const result = await response.json().catch(() => ({}) as { error?: string });
       if (!response.ok) {
-        toast.error(result.error ?? "Não foi possível remarcar.");
+        toast.error(result.error ?? "Não foi possível remarcar. Tente novamente.");
         return;
       }
-      toast.success("Agendamento remarcado.");
-      setRescheduleOpen(false);
+      // Stays open showing a confirmation the client has to dismiss on
+      // purpose — a toast alone is easy to miss, especially on mobile,
+      // and "did it actually save?" is exactly the confusion this avoids.
+      setRescheduleStep("done");
       refresh();
+    } catch {
+      toast.error("Algo deu errado. Verifique sua internet e tente novamente.");
     } finally {
       setIsRescheduling(false);
     }
@@ -271,53 +277,73 @@ export function PaymentStatusScreen({ appointmentId }: { appointmentId: string }
 
       <Dialog open={rescheduleOpen} onOpenChange={setRescheduleOpen}>
         <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Remarcar agendamento</DialogTitle>
-            <DialogDescription>
-              {rescheduleStep === 1 ? "Escolha o novo dia." : "Escolha o novo horário."}
-            </DialogDescription>
-          </DialogHeader>
+          {rescheduleStep === "done" ? (
+            <>
+              <DialogHeader>
+                <DialogTitle className="flex items-center gap-2">
+                  <CheckCircle2 className="h-5 w-5 text-emerald-500" />
+                  Remarcado!
+                </DialogTitle>
+                <DialogDescription>
+                  Seu novo horário é{" "}
+                  {rescheduleDate && formatDateBR(rescheduleDate)} às {rescheduleTime}.
+                </DialogDescription>
+              </DialogHeader>
+              <DialogFooter>
+                <Button onClick={() => setRescheduleOpen(false)}>Fechar</Button>
+              </DialogFooter>
+            </>
+          ) : (
+            <>
+              <DialogHeader>
+                <DialogTitle>Remarcar agendamento</DialogTitle>
+                <DialogDescription>
+                  {rescheduleStep === 1 ? "Escolha o novo dia." : "Escolha o novo horário."}
+                </DialogDescription>
+              </DialogHeader>
 
-          {rescheduleStep === 1 && (
-            <StepDate selectedDate={rescheduleDate} onSelect={setRescheduleDate} />
+              {rescheduleStep === 1 && (
+                <StepDate selectedDate={rescheduleDate} onSelect={setRescheduleDate} />
+              )}
+
+              {rescheduleStep === 2 && appointment.service && rescheduleDate && (
+                <StepTime
+                  tenantSlug={tenantSlug}
+                  serviceId={appointment.service.id}
+                  date={rescheduleDate}
+                  selectedTime={rescheduleTime}
+                  onSelect={setRescheduleTime}
+                  excludeAppointmentId={appointment.id}
+                />
+              )}
+
+              <DialogFooter>
+                {rescheduleStep === 2 && (
+                  <Button
+                    variant="outline"
+                    onClick={() => {
+                      setRescheduleStep(1);
+                      setRescheduleTime(null);
+                    }}
+                    disabled={isRescheduling}
+                  >
+                    Voltar
+                  </Button>
+                )}
+                {rescheduleStep === 1 && (
+                  <Button disabled={!rescheduleDate} onClick={() => setRescheduleStep(2)}>
+                    Continuar
+                  </Button>
+                )}
+                {rescheduleStep === 2 && (
+                  <Button disabled={!rescheduleTime || isRescheduling} onClick={handleRescheduleConfirm}>
+                    {isRescheduling && <Loader2 className="h-4 w-4 animate-spin" />}
+                    Confirmar remarcação
+                  </Button>
+                )}
+              </DialogFooter>
+            </>
           )}
-
-          {rescheduleStep === 2 && appointment.service && rescheduleDate && (
-            <StepTime
-              tenantSlug={tenantSlug}
-              serviceId={appointment.service.id}
-              date={rescheduleDate}
-              selectedTime={rescheduleTime}
-              onSelect={setRescheduleTime}
-              excludeAppointmentId={appointment.id}
-            />
-          )}
-
-          <DialogFooter>
-            {rescheduleStep === 2 && (
-              <Button
-                variant="outline"
-                onClick={() => {
-                  setRescheduleStep(1);
-                  setRescheduleTime(null);
-                }}
-                disabled={isRescheduling}
-              >
-                Voltar
-              </Button>
-            )}
-            {rescheduleStep === 1 && (
-              <Button disabled={!rescheduleDate} onClick={() => setRescheduleStep(2)}>
-                Continuar
-              </Button>
-            )}
-            {rescheduleStep === 2 && (
-              <Button disabled={!rescheduleTime || isRescheduling} onClick={handleRescheduleConfirm}>
-                {isRescheduling && <Loader2 className="h-4 w-4 animate-spin" />}
-                Confirmar remarcação
-              </Button>
-            )}
-          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>
