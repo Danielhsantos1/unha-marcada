@@ -192,9 +192,9 @@ function MonthView({
   const currentMonth = referenceDateISO.slice(0, 7);
 
   return (
-    <div className="grid grid-cols-7 gap-2">
+    <div className="grid grid-cols-7 gap-1 sm:gap-2">
       {["Seg", "Ter", "Qua", "Qui", "Sex", "Sáb", "Dom"].map((label) => (
-        <div key={label} className="text-center text-xs font-medium text-neutral-400">
+        <div key={label} className="text-center text-[10px] font-medium text-neutral-400 sm:text-xs">
           {label}
         </div>
       ))}
@@ -209,15 +209,21 @@ function MonthView({
             key={day}
             href={`/${slug}/admin/agenda?view=dia&data=${day}`}
             className={cn(
-              "flex min-h-20 flex-col gap-1 rounded-xl border border-neutral-200 bg-white p-2 text-left hover:border-rose-300",
+              "flex min-h-12 flex-col gap-1 rounded-lg border border-neutral-200 bg-white p-1 text-left hover:border-rose-300 sm:min-h-20 sm:rounded-xl sm:p-2",
               !inMonth && "opacity-40",
             )}
           >
             <div className="flex items-center justify-between">
-              <span className="text-xs font-medium text-neutral-700">{dayNumber}</span>
+              <span className="text-[11px] font-medium text-neutral-700 sm:text-xs">{dayNumber}</span>
               {blockedDatesSet.has(day) && <span className="h-1.5 w-1.5 rounded-full bg-neutral-400" />}
             </div>
-            <div className="flex flex-col gap-0.5">
+
+            {/* Phones: just a dot so the day stays tappable and legible — the full list only fits from sm: up. */}
+            {dayAppointments.length > 0 && (
+              <span className="h-1.5 w-1.5 rounded-full bg-rose-400 sm:hidden" />
+            )}
+
+            <div className="hidden flex-col gap-0.5 sm:flex">
               {dayAppointments.slice(0, 3).map((appt) => (
                 <span key={appt.id} className="truncate text-[10px] text-neutral-500">
                   {formatTimeBR(appt.start_time)} {appt.client_name}
