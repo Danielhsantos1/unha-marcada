@@ -101,6 +101,25 @@ export async function createSalonAction(formData: unknown): Promise<CreateSalonR
   };
 }
 
+/**
+ * Ativa/suspende um salão — a chave pra "cliente parou de pagar a
+ * mensalidade". Suspender não apaga nada: só derruba a policy pública
+ * de tenants (`is_active = true`) e a checagem em /api/appointments, então
+ * a página pública do salão e o link de agendar param de funcionar até
+ * reativar.
+ */
+export async function toggleTenantActiveAction(tenantId: string, isActive: boolean) {
+  await requirePlatformAdmin();
+
+  const supabase = createAdminClient();
+  const { error } = await supabase.from("tenants").update({ is_active: isActive }).eq("id", tenantId);
+
+  if (error) return { error: "Não foi possível atualizar o status do salão." };
+
+  revalidatePath("/painel-mestre");
+  return { error: null };
+}
+
 export async function platformSignOutAction() {
   const supabase = await createClient();
   await supabase.auth.signOut();
