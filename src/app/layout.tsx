@@ -11,6 +11,11 @@ const inter = Inter({
 export const metadata: Metadata = {
   title: "Unha Marcada — Agendamento de Manicure e Pedicure",
   description: "Agende seu horário de manicure e pedicure com pagamento de sinal via PIX.",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "Unha Marcada",
+  },
 };
 
 // Garante que toda página abre na escala correta em qualquer aparelho —
