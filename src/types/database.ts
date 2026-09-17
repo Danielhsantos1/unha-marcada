@@ -120,6 +120,41 @@ export interface TenantPaymentCredentials {
   updated_at: string;
 }
 
+export type PaymentMethod = "PIX" | "DINHEIRO" | "CARTAO_DEBITO" | "CARTAO_CREDITO" | "OUTRO";
+
+export type FinancialTransactionType = "SINAL" | "PAGAMENTO_FINAL" | "ESTORNO";
+
+/**
+ * One row per real money movement — the PIX sinal, a final payment
+ * collected in person, or a controlled refund. Append-only: see
+ * supabase/migrations/0003_payment_transactions.sql.
+ */
+export interface PaymentTransaction {
+  id: string;
+  receipt_number: number;
+  tenant_id: string;
+  appointment_id: string;
+  type: FinancialTransactionType;
+  amount_cents: number;
+  method: PaymentMethod;
+  note: string | null;
+  recorded_by: string | null;
+  recorded_at: string;
+  created_at: string;
+}
+
+/** Read-only view: derived totals for one appointment, never stored/duplicated. */
+export interface AppointmentPaymentSummary {
+  appointment_id: string;
+  tenant_id: string;
+  total_price_cents: number;
+  appointment_status: AppointmentStatus;
+  amount_received_cents: number;
+  balance_due_cents: number;
+  last_payment_at: string | null;
+  last_receipt_number: number | null;
+}
+
 export interface AppointmentWithRelations extends Appointment {
   service: Service;
   tenant: Tenant;

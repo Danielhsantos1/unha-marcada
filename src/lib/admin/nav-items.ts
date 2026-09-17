@@ -4,6 +4,7 @@ import {
   Users,
   Sparkles,
   Wallet,
+  CircleDollarSign,
   BarChart3,
   Settings,
   type LucideIcon,
@@ -24,6 +25,7 @@ export function adminNavItems(slug: string): AdminNavItem[] {
     { href: `${base}/clientes`, label: "Clientes", icon: Users },
     { href: `${base}/servicos`, label: "Serviços", icon: Sparkles },
     { href: `${base}/pagamentos`, label: "Pagamentos", icon: Wallet },
+    { href: `${base}/contas-a-receber`, label: "Contas a Receber", icon: CircleDollarSign },
     { href: `${base}/relatorios`, label: "Relatórios", icon: BarChart3 },
     { href: `${base}/configuracoes`, label: "Configurações", icon: Settings },
   ];
