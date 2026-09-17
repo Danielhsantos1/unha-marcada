@@ -2,12 +2,24 @@
 
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
-import { CheckCircle2, Clock, XCircle } from "lucide-react";
+import { toast } from "sonner";
+import { CheckCircle2, Clock, XCircle, Copy, Loader2 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "@/components/ui/dialog";
 import { CountdownTimer } from "@/components/booking/countdown-timer";
 import { PixPanel } from "@/components/booking/pix-panel";
+import { StepDate } from "@/components/booking/step-date";
+import { StepTime } from "@/components/booking/step-time";
 import { formatBRL, formatDateBR, formatTimeBR } from "@/lib/utils";
+import { SELF_SERVICE_CUTOFF_HOURS } from "@/lib/constants";
 import type { AppointmentStatus } from "@/types/database";
 
 const POLL_INTERVAL_MS = 4000;
@@ -21,7 +33,7 @@ interface StatusResponse {
     deposit_amount_cents: number;
     hold_expires_at: string;
     client_name: string;
-    service: { name: string } | null;
+    service: { id: string; name: string } | null;
     tenant: { slug: string; name: string } | null;
   };
   payment: {
@@ -32,8 +44,21 @@ interface StatusResponse {
   } | null;
 }
 
+/** Same rule the server enforces on cancel/reschedule — used here only to show/hide the buttons. */
+function hoursUntil(dateISO: string, time: string): number {
+  const target = new Date(`${dateISO}T${time}-03:00`);
+  return (target.getTime() - Date.now()) / 3_600_000;
+}
+
 export function PaymentStatusScreen({ appointmentId }: { appointmentId: string }) {
   const [data, setData] = useState<StatusResponse | null>(null);
+  const [cancelOpen, setCancelOpen] = useState(false);
+  const [isCancelling, setIsCancelling] = useState(false);
+  const [rescheduleOpen, setRescheduleOpen] = useState(false);
+  const [rescheduleStep, setRescheduleStep] = useState<1 | 2>(1);
+  const [rescheduleDate, setRescheduleDate] = useState<string | null>(null);
+  const [rescheduleTime, setRescheduleTime] = useState<string | null>(null);
+  const [isRescheduling, setIsRescheduling] = useState(false);
 
   const refresh = useCallback(async () => {
     const response = await fetch(`/api/appointments/${appointmentId}/status`, {
@@ -48,12 +73,72 @@ export function PaymentStatusScreen({ appointmentId }: { appointmentId: string }
     return () => clearInterval(interval);
   }, [refresh]);
 
+  async function handleCopyLink() {
+    try {
+      await navigator.clipboard.writeText(window.location.href);
+      toast.success("Link copiado.");
+    } catch {
+      toast.error("Não foi possível copiar o link.");
+    }
+  }
+
+  async function handleCancelConfirm() {
+    setIsCancelling(true);
+    try {
+      const response = await fetch(`/api/appointments/${appointmentId}/cancel`, {
+        method: "POST",
+      });
+      const result = await response.json();
+      if (!response.ok) {
+        toast.error(result.error ?? "Não foi possível cancelar.");
+        return;
+      }
+      toast.success("Agendamento cancelado.");
+      setCancelOpen(false);
+      refresh();
+    } finally {
+      setIsCancelling(false);
+    }
+  }
+
+  function openReschedule() {
+    setRescheduleStep(1);
+    setRescheduleDate(null);
+    setRescheduleTime(null);
+    setRescheduleOpen(true);
+  }
+
+  async function handleRescheduleConfirm() {
+    if (!rescheduleDate || !rescheduleTime) return;
+    setIsRescheduling(true);
+    try {
+      const response = await fetch(`/api/appointments/${appointmentId}/reschedule`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ date: rescheduleDate, time: rescheduleTime }),
+      });
+      const result = await response.json();
+      if (!response.ok) {
+        toast.error(result.error ?? "Não foi possível remarcar.");
+        return;
+      }
+      toast.success("Agendamento remarcado.");
+      setRescheduleOpen(false);
+      refresh();
+    } finally {
+      setIsRescheduling(false);
+    }
+  }
+
   if (!data) {
     return <p className="py-20 text-center text-neutral-400">Carregando...</p>;
   }
 
   const { appointment, payment } = data;
   const tenantSlug = appointment.tenant?.slug ?? "";
+  const canSelfServe =
+    appointment.status === "CONFIRMED" &&
+    hoursUntil(appointment.appointment_date, appointment.start_time) >= SELF_SERVICE_CUTOFF_HOURS;
 
   return (
     <div className="mx-auto flex w-full max-w-md flex-col items-center gap-6 px-6 py-12">
@@ -89,18 +174,54 @@ export function PaymentStatusScreen({ appointmentId }: { appointmentId: string }
       )}
 
       {appointment.status === "CONFIRMED" && (
-        <div className="flex flex-col items-center gap-3 text-center">
-          <CheckCircle2 className="h-12 w-12 text-emerald-500" />
-          <h1 className="text-xl font-semibold text-neutral-900">Agendamento confirmado!</h1>
-          <p className="text-neutral-500">
-            {appointment.client_name}, seu horário de {appointment.service?.name} está garantido
-            para {formatDateBR(appointment.appointment_date)} às{" "}
-            {formatTimeBR(appointment.start_time)}.
-          </p>
-          <Button asChild variant="outline">
+        <>
+          <div className="flex flex-col items-center gap-3 text-center">
+            <CheckCircle2 className="h-12 w-12 text-emerald-500" />
+            <h1 className="text-xl font-semibold text-neutral-900">Agendamento confirmado!</h1>
+            <p className="text-neutral-500">
+              {appointment.client_name}, seu horário de {appointment.service?.name} está garantido
+              para {formatDateBR(appointment.appointment_date)} às{" "}
+              {formatTimeBR(appointment.start_time)}.
+            </p>
+          </div>
+
+          <Card className="w-full">
+            <CardContent className="flex flex-col gap-2 p-4">
+              <p className="text-xs text-neutral-500">
+                Esse é o link do seu comprovante — salva ele (ou favorita a página) pra acessar,
+                remarcar ou cancelar seu horário depois.
+              </p>
+              <Button variant="outline" size="sm" onClick={handleCopyLink} className="w-fit gap-1.5">
+                <Copy className="h-3.5 w-3.5" />
+                Copiar link
+              </Button>
+            </CardContent>
+          </Card>
+
+          {canSelfServe ? (
+            <div className="flex w-full gap-2">
+              <Button variant="outline" className="flex-1" onClick={openReschedule}>
+                Remarcar
+              </Button>
+              <Button
+                variant="outline"
+                className="flex-1 text-red-600 hover:text-red-700"
+                onClick={() => setCancelOpen(true)}
+              >
+                Cancelar
+              </Button>
+            </div>
+          ) : (
+            <p className="text-center text-xs text-neutral-400">
+              Faltam menos de {SELF_SERVICE_CUTOFF_HOURS}h para o horário — pra cancelar ou
+              remarcar agora, fale direto com {appointment.tenant?.name ?? "o salão"}.
+            </p>
+          )}
+
+          <Button asChild variant="ghost">
             <Link href={`/${tenantSlug}`}>Voltar para o início</Link>
           </Button>
-        </div>
+        </>
       )}
 
       {(appointment.status === "EXPIRED" || appointment.status === "CANCELLED") && (
@@ -127,6 +248,78 @@ export function PaymentStatusScreen({ appointmentId }: { appointmentId: string }
           <p className="text-neutral-500">Esperamos que tenha gostado! Até a próxima.</p>
         </div>
       )}
+
+      <Dialog open={cancelOpen} onOpenChange={setCancelOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Cancelar agendamento</DialogTitle>
+            <DialogDescription>
+              O horário será liberado. Essa ação não pode ser desfeita.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setCancelOpen(false)} disabled={isCancelling}>
+              Voltar
+            </Button>
+            <Button variant="destructive" onClick={handleCancelConfirm} disabled={isCancelling}>
+              {isCancelling && <Loader2 className="h-4 w-4 animate-spin" />}
+              Confirmar cancelamento
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={rescheduleOpen} onOpenChange={setRescheduleOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Remarcar agendamento</DialogTitle>
+            <DialogDescription>
+              {rescheduleStep === 1 ? "Escolha o novo dia." : "Escolha o novo horário."}
+            </DialogDescription>
+          </DialogHeader>
+
+          {rescheduleStep === 1 && (
+            <StepDate selectedDate={rescheduleDate} onSelect={setRescheduleDate} />
+          )}
+
+          {rescheduleStep === 2 && appointment.service && rescheduleDate && (
+            <StepTime
+              tenantSlug={tenantSlug}
+              serviceId={appointment.service.id}
+              date={rescheduleDate}
+              selectedTime={rescheduleTime}
+              onSelect={setRescheduleTime}
+              excludeAppointmentId={appointment.id}
+            />
+          )}
+
+          <DialogFooter>
+            {rescheduleStep === 2 && (
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setRescheduleStep(1);
+                  setRescheduleTime(null);
+                }}
+                disabled={isRescheduling}
+              >
+                Voltar
+              </Button>
+            )}
+            {rescheduleStep === 1 && (
+              <Button disabled={!rescheduleDate} onClick={() => setRescheduleStep(2)}>
+                Continuar
+              </Button>
+            )}
+            {rescheduleStep === 2 && (
+              <Button disabled={!rescheduleTime || isRescheduling} onClick={handleRescheduleConfirm}>
+                {isRescheduling && <Loader2 className="h-4 w-4 animate-spin" />}
+                Confirmar remarcação
+              </Button>
+            )}
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

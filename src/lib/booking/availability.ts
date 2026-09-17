@@ -72,9 +72,21 @@ export async function getAvailableSlots(
   tenantId: string,
   dateISO: string,
   durationMinutes: number,
+  excludeAppointmentId?: string,
 ): Promise<string[]> {
   const supabase = createAdminClient();
   const dow = dayOfWeekFor(dateISO);
+
+  let appointmentsQuery = supabase
+    .from("appointments")
+    .select("start_time, end_time, status, hold_expires_at")
+    .eq("tenant_id", tenantId)
+    .eq("appointment_date", dateISO)
+    .in("status", ["PENDING_PAYMENT", "CONFIRMED"]);
+
+  if (excludeAppointmentId) {
+    appointmentsQuery = appointmentsQuery.neq("id", excludeAppointmentId);
+  }
 
   const [{ data: windows }, { data: blocks }, { data: appointments }] = await Promise.all([
     supabase
@@ -89,12 +101,7 @@ export async function getAvailableSlots(
       .eq("tenant_id", tenantId)
       .lte("starts_at", `${dateISO}T23:59:59.999Z`)
       .gte("ends_at", `${dateISO}T00:00:00.000Z`),
-    supabase
-      .from("appointments")
-      .select("start_time, end_time, status, hold_expires_at")
-      .eq("tenant_id", tenantId)
-      .eq("appointment_date", dateISO)
-      .in("status", ["PENDING_PAYMENT", "CONFIRMED"]),
+    appointmentsQuery,
   ]);
 
   if (!windows || windows.length === 0) return [];
@@ -143,6 +150,12 @@ export async function getAvailableSlots(
   }
 
   return slots;
+}
+
+/** How many hours from now until a "YYYY-MM-DD" + "HH:MM:SS" appointment starts. */
+export function hoursUntilAppointment(dateISO: string, time: string): number {
+  const target = new Date(`${dateISO}T${time}-03:00`);
+  return (target.getTime() - Date.now()) / 3_600_000;
 }
 
 export { timeStringToMinutes, minutesToTimeString };

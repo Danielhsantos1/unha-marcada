@@ -7,6 +7,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ slug
   const { searchParams } = new URL(request.url);
   const serviceId = searchParams.get("serviceId");
   const date = searchParams.get("date");
+  const excludeAppointmentId = searchParams.get("excludeAppointmentId") ?? undefined;
 
   if (!serviceId || !date || !/^\d{4}-\d{2}-\d{2}$/.test(date)) {
     return NextResponse.json({ error: "Parâmetros inválidos." }, { status: 400 });
@@ -37,7 +38,12 @@ export async function GET(request: Request, { params }: { params: Promise<{ slug
     return NextResponse.json({ error: "Serviço não encontrado." }, { status: 404 });
   }
 
-  const slots = await getAvailableSlots(tenant.id, date, service.duration_minutes);
+  const slots = await getAvailableSlots(
+    tenant.id,
+    date,
+    service.duration_minutes,
+    excludeAppointmentId,
+  );
 
   return NextResponse.json({ slots });
 }
