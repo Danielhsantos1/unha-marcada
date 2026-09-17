@@ -26,9 +26,9 @@ export async function POST(request: Request) {
 
   const { data: paymentRow } = await supabase
     .from("payments")
-    .select("tenant_id, appointment_id")
+    .select("tenant_id, appointment_id, amount_cents")
     .eq("provider_payment_id", dataId)
-    .maybeSingle<{ tenant_id: string; appointment_id: string }>();
+    .maybeSingle<{ tenant_id: string; appointment_id: string; amount_cents: number }>();
 
   if (!paymentRow) {
     return NextResponse.json({ error: "Pagamento não encontrado." }, { status: 404 });
@@ -71,26 +71,43 @@ export async function POST(request: Request) {
         ? "FAILED"
         : "PENDING";
 
+  const paidAt = new Date().toISOString();
+
   await supabase
     .from("payments")
     .update({
       status: newStatus,
       provider_payment_id: String(mpPayment.id),
       raw_payload: mpPayment as unknown as Record<string, unknown>,
-      paid_at: newStatus === "PAID" ? new Date().toISOString() : null,
+      paid_at: newStatus === "PAID" ? paidAt : null,
     })
     .eq("appointment_id", appointmentId)
     .eq("tenant_id", paymentRow.tenant_id);
 
   if (newStatus === "PAID") {
     // Only flip a still-pending hold — never resurrect an EXPIRED/CANCELLED
-    // appointment just because a late webhook arrived.
-    await supabase
+    // appointment just because a late webhook arrived. .select() lets us
+    // tell a real transition from a webhook retry on an already-CONFIRMED
+    // appointment, so the sinal only ever gets recorded in the ledger once.
+    const { data: confirmed } = await supabase
       .from("appointments")
       .update({ status: "CONFIRMED" })
       .eq("id", appointmentId)
       .eq("tenant_id", paymentRow.tenant_id)
-      .eq("status", "PENDING_PAYMENT");
+      .eq("status", "PENDING_PAYMENT")
+      .select("id");
+
+    if (confirmed && confirmed.length > 0) {
+      await supabase.from("payment_transactions").insert({
+        tenant_id: paymentRow.tenant_id,
+        appointment_id: appointmentId,
+        type: "SINAL",
+        amount_cents: paymentRow.amount_cents,
+        method: "PIX",
+        recorded_by: null,
+        recorded_at: paidAt,
+      });
+    }
   } else if (newStatus === "FAILED") {
     await supabase
       .from("appointments")
