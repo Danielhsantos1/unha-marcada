@@ -10,12 +10,14 @@ export function StepTime({
   date,
   selectedTime,
   onSelect,
+  excludeAppointmentId,
 }: {
   tenantSlug: string;
   serviceId: string;
   date: string;
   selectedTime: string | null;
   onSelect: (time: string) => void;
+  excludeAppointmentId?: string;
 }) {
   const [slots, setSlots] = useState<string[] | null>(null);
   const [error, setError] = useState(false);
@@ -25,7 +27,8 @@ export function StepTime({
     setSlots(null);
     setError(false);
 
-    fetch(`/api/tenants/${tenantSlug}/slots?serviceId=${serviceId}&date=${date}`)
+    const exclude = excludeAppointmentId ? `&excludeAppointmentId=${excludeAppointmentId}` : "";
+    fetch(`/api/tenants/${tenantSlug}/slots?serviceId=${serviceId}&date=${date}${exclude}`)
       .then((res) => {
         if (!res.ok) throw new Error("failed");
         return res.json();
@@ -40,7 +43,7 @@ export function StepTime({
     return () => {
       cancelled = true;
     };
-  }, [tenantSlug, serviceId, date]);
+  }, [tenantSlug, serviceId, date, excludeAppointmentId]);
 
   return (
     <div className="flex flex-col gap-6">

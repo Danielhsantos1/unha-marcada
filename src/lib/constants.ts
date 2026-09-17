@@ -3,6 +3,14 @@ import type { AppointmentStatus, PaymentStatus, ServiceCategory } from "@/types/
 /** How long a client has to pay the PIX deposit before the slot is released. */
 export const HOLD_DURATION_MINUTES = 15;
 
+/**
+ * How close to the appointment's start time a client can still cancel or
+ * reschedule it themselves through the guest link. Inside this window they
+ * need to contact the salon directly — gives the professional a chance to
+ * react to a last-minute change instead of finding out from an empty slot.
+ */
+export const SELF_SERVICE_CUTOFF_HOURS = 3;
+
 export const SERVICE_CATEGORY_LABELS: Record<ServiceCategory, string> = {
   maos: "Mãos",
   pes: "Pés",

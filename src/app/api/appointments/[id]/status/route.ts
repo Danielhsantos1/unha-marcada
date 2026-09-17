@@ -14,7 +14,7 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
   const { data: appointment } = await supabase
     .from("appointments")
     .select(
-      "id, status, appointment_date, start_time, end_time, total_price_cents, deposit_amount_cents, hold_expires_at, client_name, service:services(name), tenant:tenants(slug, name)",
+      "id, status, appointment_date, start_time, end_time, total_price_cents, deposit_amount_cents, hold_expires_at, client_name, service:services(id, name), tenant:tenants(slug, name)",
     )
     .eq("id", id)
     .maybeSingle();
