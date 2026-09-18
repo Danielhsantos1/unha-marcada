@@ -1,7 +1,3 @@
-"use client";
-
-import { Loader2 } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { formatBRL, formatDateBR } from "@/lib/utils";
@@ -13,15 +9,11 @@ export function StepSummary({
   date,
   time,
   clientName,
-  onConfirm,
-  isSubmitting,
 }: {
   service: Service;
   date: string;
   time: string;
   clientName: string;
-  onConfirm: () => void;
-  isSubmitting: boolean;
 }) {
   const depositCents = calculateDepositCents(service);
 
@@ -51,11 +43,6 @@ export function StepSummary({
         O horário fica reservado por 15 minutos para você concluir o pagamento do
         sinal via PIX.
       </p>
-
-      <Button size="lg" onClick={onConfirm} disabled={isSubmitting}>
-        {isSubmitting && <Loader2 className="h-4 w-4 animate-spin" />}
-        Pagar e Confirmar
-      </Button>
     </div>
   );
 }

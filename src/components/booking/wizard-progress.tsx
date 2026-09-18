@@ -3,53 +3,33 @@ import { cn } from "@/lib/utils";
 const STEP_LABELS = ["Serviço", "Data", "Horário", "Seus dados", "Resumo"];
 
 export function WizardProgress({ currentStep }: { currentStep: number }) {
-  return (
-    <ol className="mx-auto flex w-full max-w-xl items-center justify-between px-2">
-      {STEP_LABELS.map((label, index) => {
-        const step = index + 1;
-        const isActive = step === currentStep;
-        const isDone = step < currentStep;
+  const total = STEP_LABELS.length;
+  const label = STEP_LABELS[currentStep - 1];
 
-        return (
-          <li key={label} className="flex flex-1 flex-col items-center gap-1.5">
-            <div className="flex w-full items-center">
-              {index > 0 && (
-                <div
-                  className={cn(
-                    "h-px flex-1",
-                    isDone || isActive ? "bg-rose-400" : "bg-neutral-200",
-                  )}
-                />
-              )}
-              <span
-                className={cn(
-                  "flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-semibold",
-                  isDone
-                    ? "bg-rose-500 text-white"
-                    : isActive
-                      ? "border-2 border-rose-500 bg-white text-rose-600"
-                      : "border border-neutral-300 bg-white text-neutral-400",
-                )}
-              >
-                {step}
-              </span>
-              {index < STEP_LABELS.length - 1 && (
-                <div
-                  className={cn("h-px flex-1", isDone ? "bg-rose-400" : "bg-neutral-200")}
-                />
-              )}
-            </div>
-            <span
+  return (
+    <div className="mx-auto flex w-full max-w-2xl flex-col gap-2">
+      <div className="flex items-baseline justify-between text-xs font-medium text-neutral-500">
+        <span>
+          Passo {currentStep} de {total}
+        </span>
+        <span className="text-rose-600">{label}</span>
+      </div>
+      <div className="flex gap-1.5" role="progressbar" aria-valuenow={currentStep} aria-valuemin={1} aria-valuemax={total}>
+        {STEP_LABELS.map((stepLabel, index) => {
+          const step = index + 1;
+          const isDone = step < currentStep;
+          const isActive = step === currentStep;
+          return (
+            <div
+              key={stepLabel}
               className={cn(
-                "hidden text-[11px] sm:block",
-                isActive ? "font-medium text-rose-600" : "text-neutral-400",
+                "h-1 flex-1 rounded-full transition-colors",
+                isDone || isActive ? "bg-rose-500" : "bg-neutral-200",
               )}
-            >
-              {label}
-            </span>
-          </li>
-        );
-      })}
-    </ol>
+            />
+          );
+        })}
+      </div>
+    </div>
   );
 }
