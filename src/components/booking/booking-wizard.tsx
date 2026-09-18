@@ -3,9 +3,8 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { ChevronLeft } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { WizardProgress } from "@/components/booking/wizard-progress";
+import { WizardActionBar } from "@/components/booking/wizard-action-bar";
 import { StepService } from "@/components/booking/step-service";
 import { StepDate } from "@/components/booking/step-date";
 import { StepTime } from "@/components/booking/step-time";
@@ -14,6 +13,19 @@ import { StepSummary } from "@/components/booking/step-summary";
 import { emptyBookingSelection, type BookingSelection } from "@/types/booking";
 import type { ClientInfoInput } from "@/lib/validations/booking";
 import type { Service } from "@/types/database";
+import { formatBRL, formatDateBR } from "@/lib/utils";
+
+function buildBarSummary(selection: BookingSelection): string | null {
+  const parts: string[] = [];
+  if (selection.service) {
+    parts.push(
+      `${selection.service.name} · ${selection.service.duration_minutes} min · ${formatBRL(selection.service.price_cents)}`,
+    );
+  }
+  if (selection.date) parts.push(formatDateBR(selection.date));
+  if (selection.time) parts.push(selection.time);
+  return parts.length > 0 ? parts.join(" · ") : null;
+}
 
 export function BookingWizard({
   tenantSlug,
@@ -34,6 +46,10 @@ export function BookingWizard({
 
   function goBack() {
     setStep((current) => Math.max(1, current - 1));
+  }
+
+  function goForward() {
+    setStep((current) => current + 1);
   }
 
   function handleClientInfoSubmit(data: ClientInfoInput) {
@@ -83,8 +99,10 @@ export function BookingWizard({
     }
   }
 
+  const barSummary = step === 1 ? null : buildBarSummary(selection);
+
   return (
-    <div className="mx-auto flex w-full max-w-2xl flex-col gap-8 px-6 py-12">
+    <div className="mx-auto flex w-full max-w-2xl flex-col gap-8 px-6 pb-32 pt-8">
       <WizardProgress currentStep={step} />
 
       {step === 1 && (
@@ -130,39 +148,48 @@ export function BookingWizard({
           date={selection.date}
           time={selection.time}
           clientName={selection.clientName}
-          onConfirm={handleConfirm}
-          isSubmitting={isSubmitting}
         />
       )}
 
-      {step < 5 && (
-        <div className="flex items-center justify-between">
-          <Button variant="ghost" onClick={goBack} disabled={step === 1}>
-            <ChevronLeft className="h-4 w-4" />
-            Voltar
-          </Button>
+      {step === 1 && (
+        <WizardActionBar
+          primaryLabel="Continuar"
+          primaryDisabled={!canContinue}
+          onPrimaryClick={goForward}
+          summary={barSummary}
+        />
+      )}
 
-          {step !== 4 && (
-            <Button onClick={() => setStep((current) => current + 1)} disabled={!canContinue}>
-              Continuar
-            </Button>
-          )}
+      {(step === 2 || step === 3) && (
+        <WizardActionBar
+          onBack={goBack}
+          primaryLabel="Continuar"
+          primaryDisabled={!canContinue}
+          onPrimaryClick={goForward}
+          summary={barSummary}
+        />
+      )}
 
-          {step === 4 && (
-            <Button type="submit" form="client-info-form">
-              Continuar
-            </Button>
-          )}
-        </div>
+      {step === 4 && (
+        <WizardActionBar
+          onBack={goBack}
+          primaryLabel="Continuar"
+          primaryType="submit"
+          formId="client-info-form"
+          summary={barSummary}
+        />
       )}
 
       {step === 5 && (
-        <div className="flex justify-start">
-          <Button variant="ghost" onClick={goBack} disabled={isSubmitting}>
-            <ChevronLeft className="h-4 w-4" />
-            Voltar
-          </Button>
-        </div>
+        <WizardActionBar
+          onBack={goBack}
+          backDisabled={isSubmitting}
+          primaryLabel="Confirmar agendamento"
+          primaryDisabled={isSubmitting}
+          primaryLoading={isSubmitting}
+          onPrimaryClick={handleConfirm}
+          summary={barSummary}
+        />
       )}
     </div>
   );
