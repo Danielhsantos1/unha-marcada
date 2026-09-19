@@ -6,6 +6,11 @@ import { cn } from "@/lib/utils";
 
 const DAYS_AHEAD = 21;
 
+// date-fns não abrevia dia da semana em pt-BR (o token "EEE" devolve a
+// palavra inteira, ex. "segunda") — abreviação própria, indexada por
+// getDay() (0 = domingo .. 6 = sábado).
+const WEEKDAY_SHORT = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
+
 export function StepDate({
   selectedDate,
   onSelect,
@@ -30,7 +35,7 @@ export function StepDate({
             ? "Hoje"
             : isTomorrow(day)
               ? "Amanhã"
-              : format(day, "EEE", { locale: ptBR });
+              : WEEKDAY_SHORT[day.getDay()];
           return (
             <button
               key={iso}
