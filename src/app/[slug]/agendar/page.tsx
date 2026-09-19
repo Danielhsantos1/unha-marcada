@@ -3,7 +3,7 @@ import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { BookingWizard } from "@/components/booking/booking-wizard";
-import type { Service, Tenant } from "@/types/database";
+import type { Availability, Service, Tenant } from "@/types/database";
 
 export default async function AgendarPage({
   params,
@@ -33,6 +33,15 @@ export default async function AgendarPage({
     .order("display_order")
     .returns<Service[]>();
 
+  const { data: availability } = await supabase
+    .from("availability")
+    .select("day_of_week")
+    .eq("tenant_id", tenant.id)
+    .eq("is_active", true)
+    .returns<Pick<Availability, "day_of_week">[]>();
+
+  const openWeekdays = (availability ?? []).map((row) => row.day_of_week);
+
   return (
     <>
       {preview === "admin" && (
@@ -44,7 +53,7 @@ export default async function AgendarPage({
           Você está vendo como o cliente vê — voltar ao painel
         </Link>
       )}
-      <BookingWizard tenantSlug={tenant.slug} services={services ?? []} />
+      <BookingWizard tenantSlug={tenant.slug} services={services ?? []} openWeekdays={openWeekdays} />
     </>
   );
 }

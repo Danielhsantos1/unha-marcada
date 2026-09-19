@@ -30,9 +30,11 @@ function buildBarSummary(selection: BookingSelection): string | null {
 export function BookingWizard({
   tenantSlug,
   services,
+  openWeekdays,
 }: {
   tenantSlug: string;
   services: Service[];
+  openWeekdays: number[];
 }) {
   const router = useRouter();
   const [step, setStep] = useState(1);
@@ -117,6 +119,7 @@ export function BookingWizard({
         <StepDate
           selectedDate={selection.date}
           onSelect={(date) => setSelection((current) => ({ ...current, date }))}
+          openWeekdays={openWeekdays}
         />
       )}
 
