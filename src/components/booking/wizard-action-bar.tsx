@@ -26,7 +26,7 @@ export function WizardActionBar({
   summary?: string | null;
 }) {
   return (
-    <div className="fixed inset-x-0 bottom-0 z-40 border-t border-neutral-100 bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/85">
+    <div className="fixed inset-x-0 bottom-0 z-40 rounded-t-2xl bg-white/95 shadow-[0_-8px_24px_-12px_rgba(0,0,0,0.12)] backdrop-blur supports-[backdrop-filter]:bg-white/85">
       <div className="mx-auto flex w-full max-w-2xl flex-col gap-2 px-6 pt-3 pb-[calc(0.75rem+env(safe-area-inset-bottom,0px))]">
         {summary && (
           <p className="truncate text-xs font-medium text-neutral-500">{summary}</p>

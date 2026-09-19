@@ -1,3 +1,4 @@
+import { User, Sparkles, CalendarDays, Clock, Wallet } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { formatBRL, formatDateBR } from "@/lib/utils";
@@ -16,26 +17,32 @@ export function StepSummary({
   clientName: string;
 }) {
   const depositCents = calculateDepositCents(service);
+  const remainderCents = service.price_cents - depositCents;
 
   return (
     <div className="mx-auto flex w-full max-w-md flex-col gap-6">
-      <h2 className="text-center text-xl font-semibold text-neutral-900">
-        Resumo do agendamento
-      </h2>
+      <div className="flex flex-col items-center gap-1 text-center">
+        <h2 className="text-xl font-semibold text-neutral-900">Revise e confirme</h2>
+        <p className="text-sm text-neutral-500">Confere se está tudo certo antes de pagar o sinal.</p>
+      </div>
 
       <Card>
         <CardContent className="flex flex-col gap-3 p-5 text-sm">
-          <Row label="Cliente" value={clientName} />
-          <Row label="Serviço" value={service.name} />
-          <Row label="Data" value={formatDateBR(date)} />
-          <Row label="Horário" value={time} />
+          <Row icon={User} label="Cliente" value={clientName} />
+          <Row icon={Sparkles} label="Serviço" value={service.name} />
+          <Row icon={CalendarDays} label="Data" value={formatDateBR(date)} />
+          <Row icon={Clock} label="Horário" value={time} />
           <Separator />
-          <Row label="Valor total" value={formatBRL(service.price_cents)} />
-          <Row
-            label={`Sinal a pagar agora (${service.deposit_percentage}%)`}
-            value={formatBRL(depositCents)}
-            highlight
-          />
+          <Row icon={Wallet} label="Valor total" value={formatBRL(service.price_cents)} />
+          <div className="flex items-center justify-between rounded-xl bg-rose-50 px-3 py-2.5">
+            <span className="text-rose-700">Sinal a pagar agora ({service.deposit_percentage}%)</span>
+            <span className="font-semibold text-rose-700">{formatBRL(depositCents)}</span>
+          </div>
+          {remainderCents > 0 && (
+            <p className="text-center text-xs text-neutral-400">
+              Restante de {formatBRL(remainderCents)} a pagar no dia do atendimento.
+            </p>
+          )}
         </CardContent>
       </Card>
 
@@ -47,13 +54,22 @@ export function StepSummary({
   );
 }
 
-function Row({ label, value, highlight }: { label: string; value: string; highlight?: boolean }) {
+function Row({
+  icon: Icon,
+  label,
+  value,
+}: {
+  icon: typeof User;
+  label: string;
+  value: string;
+}) {
   return (
     <div className="flex items-center justify-between gap-3">
-      <span className="text-neutral-500">{label}</span>
-      <span className={highlight ? "font-semibold text-rose-600" : "font-medium text-neutral-900"}>
-        {value}
+      <span className="flex items-center gap-2 text-neutral-500">
+        <Icon className="h-4 w-4 text-neutral-400" />
+        {label}
       </span>
+      <span className="font-medium text-neutral-900">{value}</span>
     </div>
   );
 }

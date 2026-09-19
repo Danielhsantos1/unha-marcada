@@ -29,7 +29,10 @@ export function StepClientInfo({
       onSubmit={handleSubmit(onSubmit)}
       className="mx-auto flex w-full max-w-md flex-col gap-5"
     >
-      <h2 className="text-center text-xl font-semibold text-neutral-900">Seus dados</h2>
+      <div className="flex flex-col items-center gap-1 text-center">
+        <h2 className="text-xl font-semibold text-neutral-900">Seus dados</h2>
+        <p className="text-sm text-neutral-500">Pra confirmar seu agendamento e avisar sobre ele.</p>
+      </div>
 
       <div className="flex flex-col gap-1.5">
         <Label htmlFor="clientName">Nome</Label>
