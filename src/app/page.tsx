@@ -19,12 +19,14 @@ export default function HomePage() {
         exemplo, a demonstração abaixo.
       </p>
       <div className="flex flex-col items-center gap-3 sm:flex-row">
-        <Link
-          href="/comecar"
+        <a
+          href="https://wa.me/5515996229973?text=Ol%C3%A1!%20Quero%20uma%20demonstra%C3%A7%C3%A3o%20da%20Unha%20Marcada."
+          target="_blank"
+          rel="noopener noreferrer"
           className="rounded-full bg-rose-500 px-6 py-3 text-sm font-medium text-white shadow-sm transition-colors hover:bg-rose-600"
         >
-          Criar minha conta grátis
-        </Link>
+          Solicitar demonstração
+        </a>
         <Link
           href="/studio-nude"
           className="rounded-full border border-neutral-200 px-6 py-3 text-sm font-medium text-neutral-700 transition-colors hover:bg-neutral-50"
