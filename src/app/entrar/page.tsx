@@ -1,36 +1,35 @@
 import Link from "next/link";
-import { Sparkles } from "lucide-react";
-import { SelfSignupForm } from "@/components/public/self-signup-form";
+import { LogIn } from "lucide-react";
+import { SalonLoginForm } from "@/components/public/salon-login-form";
 
 export const metadata = {
-  title: "Criar minha conta — Unha Marcada",
-  description: "Crie sua conta e comece a receber agendamentos online hoje mesmo.",
+  title: "Entrar — Unha Marcada",
+  description: "Acesse o painel do seu salão.",
 };
 
-export default function ComecarPage() {
+export default function EntrarPage() {
   return (
     <main className="flex flex-col items-center gap-8 bg-gradient-to-b from-rose-50 via-white to-white px-6 py-16 sm:py-20">
       <div className="flex max-w-md flex-col items-center gap-3 text-center">
         <span className="flex h-12 w-12 items-center justify-center rounded-full bg-rose-100 text-rose-600">
-          <Sparkles className="h-5 w-5" />
+          <LogIn className="h-5 w-5" />
         </span>
         <h1 className="text-2xl font-semibold text-neutral-900 sm:text-3xl">
-          Sua agenda online em 2 minutos
+          Entrar no painel do seu salão
         </h1>
         <p className="text-sm text-neutral-500">
-          Crie sua conta grátis, cadastre seus serviços e comece a receber agendamentos com sinal
-          pago na hora — sem precisar esperar ninguém liberar seu acesso.
+          Use o e-mail e a senha que você cadastrou. Não precisa lembrar o endereço do seu salão.
         </p>
       </div>
 
       <div className="w-full max-w-md">
-        <SelfSignupForm />
+        <SalonLoginForm />
       </div>
 
       <p className="text-sm text-neutral-500">
-        Já tem uma conta?{" "}
-        <Link href="/entrar" className="font-medium text-rose-600 hover:underline">
-          Entrar
+        Ainda não tem conta?{" "}
+        <Link href="/comecar" className="font-medium text-rose-600 hover:underline">
+          Criar meu salão grátis
         </Link>
       </p>
     </main>
