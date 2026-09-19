@@ -10,12 +10,14 @@ import {
   CheckCircle2,
   Clock,
   Eye,
+  MessageCircle,
 } from "lucide-react";
 import { requireTenantStaff } from "@/lib/admin/auth";
 import { createClient } from "@/lib/supabase/server";
 import { Card, CardContent } from "@/components/ui/card";
 import { computeFinancialStatus } from "@/lib/payments/financial-status";
 import { formatBRL } from "@/lib/utils";
+import { buildBookingShareLink } from "@/lib/whatsapp";
 import type { AppointmentPaymentSummary, AppointmentStatus } from "@/types/database";
 
 export default async function AdminDashboardPage({
@@ -26,6 +28,7 @@ export default async function AdminDashboardPage({
   const { slug } = await params;
   const { tenant } = await requireTenantStaff(slug);
   const supabase = await createClient();
+  const bookingUrl = `${process.env.NEXT_PUBLIC_SITE_URL ?? ""}/${slug}/agendar`;
 
   const today = new Date().toISOString().slice(0, 10);
   const monthStart = `${today.slice(0, 7)}-01`;
@@ -125,17 +128,28 @@ export default async function AdminDashboardPage({
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="flex items-center justify-between gap-2">
+      <div className="flex flex-col gap-3">
         <h1 className="text-xl font-semibold text-neutral-900">Dashboard</h1>
-        <a
-          href={`/${slug}/agendar`}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="flex shrink-0 items-center gap-1.5 rounded-full border border-neutral-200 bg-white px-3 py-1.5 text-xs font-medium text-neutral-700 transition-colors hover:bg-neutral-50"
-        >
-          <Eye className="h-3.5 w-3.5" />
-          Ver como cliente
-        </a>
+        <div className="flex flex-wrap gap-2">
+          <a
+            href={`/${slug}/agendar?preview=admin`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex shrink-0 items-center gap-1.5 rounded-full border border-neutral-200 bg-white px-3 py-1.5 text-xs font-medium text-neutral-700 transition-colors hover:bg-neutral-50"
+          >
+            <Eye className="h-3.5 w-3.5" />
+            Ver como cliente
+          </a>
+          <a
+            href={buildBookingShareLink(tenant.name, bookingUrl)}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex shrink-0 items-center gap-1.5 rounded-full border border-neutral-200 bg-white px-3 py-1.5 text-xs font-medium text-neutral-700 transition-colors hover:bg-neutral-50"
+          >
+            <MessageCircle className="h-3.5 w-3.5" />
+            Enviar agendamento por WhatsApp
+          </a>
+        </div>
       </div>
 
       {quantidadePendencias > 0 && (

@@ -1,8 +1,9 @@
-import { Eye } from "lucide-react";
+import { Eye, MessageCircle } from "lucide-react";
 import { requireTenantStaff } from "@/lib/admin/auth";
 import { AdminNav } from "@/components/admin/admin-nav";
 import { MobileNav } from "@/components/admin/mobile-nav";
 import { LogoutButton } from "@/components/admin/logout-button";
+import { buildBookingShareLink } from "@/lib/whatsapp";
 
 export default async function AdminLayout({
   children,
@@ -13,6 +14,7 @@ export default async function AdminLayout({
 }) {
   const { slug } = await params;
   const { tenant, profile } = await requireTenantStaff(slug);
+  const bookingUrl = `${process.env.NEXT_PUBLIC_SITE_URL ?? ""}/${slug}/agendar`;
 
   return (
     <div className="flex min-h-screen bg-neutral-50">
@@ -23,13 +25,22 @@ export default async function AdminLayout({
             <span className="text-xs text-neutral-400">Unha Marcada · Painel</span>
           </div>
           <a
-            href={`/${slug}/agendar`}
+            href={`/${slug}/agendar?preview=admin`}
             target="_blank"
             rel="noopener noreferrer"
             className="flex w-fit items-center gap-1.5 text-xs font-medium text-rose-600 hover:underline"
           >
             <Eye className="h-3.5 w-3.5" />
             Ver como cliente
+          </a>
+          <a
+            href={buildBookingShareLink(tenant.name, bookingUrl)}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex w-fit items-center gap-1.5 text-xs font-medium text-rose-600 hover:underline"
+          >
+            <MessageCircle className="h-3.5 w-3.5" />
+            Enviar agendamento por WhatsApp
           </a>
         </div>
         <AdminNav slug={slug} className="flex flex-1 flex-col gap-1 p-3" />
