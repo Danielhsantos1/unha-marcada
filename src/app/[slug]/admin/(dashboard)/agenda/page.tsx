@@ -7,7 +7,9 @@ import { getAgendaRange, type AgendaView } from "@/lib/admin/agenda-range";
 import { AgendaNav } from "@/components/admin/agenda-nav";
 import { StatusLegend } from "@/components/admin/status-legend";
 import { AppointmentCard, type AgendaAppointment } from "@/components/admin/appointment-card";
+import { NewAppointmentDialog } from "@/components/admin/new-appointment-dialog";
 import { cn, formatDateBR, formatSaoPauloDateTime, formatTimeBR } from "@/lib/utils";
+import type { Service } from "@/types/database";
 
 function isValidView(value: string | undefined): value is AgendaView {
   return value === "dia" || value === "semana" || value === "mes";
@@ -40,27 +42,35 @@ export default async function AgendaPage({
   const supabase = await createClient();
   const range = getAgendaRange(view, referenceDateISO);
 
-  const [{ data: appointments }, { data: blocks }, { data: availability }] = await Promise.all([
-    supabase
-      .from("appointments")
-      .select("id, client_name, client_phone, start_time, end_time, status, appointment_date, service:services(name)")
-      .eq("tenant_id", tenant.id)
-      .gte("appointment_date", range.startISO)
-      .lte("appointment_date", range.endISO)
-      .neq("status", "EXPIRED")
-      .order("start_time"),
-    supabase
-      .from("blocked_dates")
-      .select("id, starts_at, ends_at, reason")
-      .eq("tenant_id", tenant.id)
-      .lt("starts_at", `${range.endISO}T23:59:59.999-03:00`)
-      .gt("ends_at", `${range.startISO}T00:00:00.000-03:00`),
-    supabase
-      .from("availability")
-      .select("day_of_week")
-      .eq("tenant_id", tenant.id)
-      .eq("is_active", true),
-  ]);
+  const [{ data: appointments }, { data: blocks }, { data: availability }, { data: services }] =
+    await Promise.all([
+      supabase
+        .from("appointments")
+        .select("id, client_name, client_phone, start_time, end_time, status, appointment_date, service:services(name)")
+        .eq("tenant_id", tenant.id)
+        .gte("appointment_date", range.startISO)
+        .lte("appointment_date", range.endISO)
+        .neq("status", "EXPIRED")
+        .order("start_time"),
+      supabase
+        .from("blocked_dates")
+        .select("id, starts_at, ends_at, reason")
+        .eq("tenant_id", tenant.id)
+        .lt("starts_at", `${range.endISO}T23:59:59.999-03:00`)
+        .gt("ends_at", `${range.startISO}T00:00:00.000-03:00`),
+      supabase
+        .from("availability")
+        .select("day_of_week")
+        .eq("tenant_id", tenant.id)
+        .eq("is_active", true),
+      supabase
+        .from("services")
+        .select("*")
+        .eq("tenant_id", tenant.id)
+        .eq("is_active", true)
+        .order("display_order")
+        .returns<Service[]>(),
+    ]);
 
   const openWeekdays = new Set((availability ?? []).map((row) => row.day_of_week));
   const isDateClosed = (dateISO: string) => !openWeekdays.has(dayOfWeekFor(dateISO));
@@ -89,14 +99,17 @@ export default async function AgendaPage({
 
   return (
     <div className="flex flex-col gap-5">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-2">
         <h1 className="text-xl font-semibold text-neutral-900">Agenda</h1>
-        <Link
-          href={`/${slug}/admin/configuracoes`}
-          className="text-xs font-medium text-rose-600 hover:underline"
-        >
-          Bloquear horário
-        </Link>
+        <div className="flex items-center gap-3">
+          <Link
+            href={`/${slug}/admin/configuracoes`}
+            className="text-xs font-medium text-rose-600 hover:underline"
+          >
+            Bloquear horário
+          </Link>
+          <NewAppointmentDialog slug={slug} services={services ?? []} />
+        </div>
       </div>
 
       <AgendaNav slug={slug} view={view} referenceDateISO={referenceDateISO} />
