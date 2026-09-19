@@ -2,14 +2,15 @@
 
 import { LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 import { signOutAction } from "@/app/[slug]/admin/(dashboard)/actions";
 
-export function LogoutButton({ slug }: { slug: string }) {
+export function LogoutButton({ slug, className }: { slug: string; className?: string }) {
   return (
     <Button
       variant="ghost"
       size="sm"
-      className="w-full justify-start gap-2 text-neutral-500"
+      className={cn("justify-start gap-2 text-neutral-500", className)}
       onClick={() => signOutAction(slug)}
     >
       <LogOut className="h-4 w-4" />
