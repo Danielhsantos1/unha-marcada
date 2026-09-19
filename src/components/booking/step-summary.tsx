@@ -1,4 +1,4 @@
-import { User, Sparkles, CalendarDays, Clock, Wallet } from "lucide-react";
+import { User, Sparkles, CalendarDays, Clock, Wallet, AlertTriangle } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { formatBRL, formatDateBR } from "@/lib/utils";
@@ -45,6 +45,14 @@ export function StepSummary({
           )}
         </CardContent>
       </Card>
+
+      <div className="flex items-start gap-2 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2.5 text-xs text-amber-800">
+        <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
+        <p>
+          Ao confirmar o agendamento e pagar o sinal, esse valor não é reembolsado em caso de
+          cancelamento. Você pode remarcar o horário sem perder o sinal já pago.
+        </p>
+      </div>
 
       <p className="text-center text-xs text-neutral-400">
         O horário fica reservado por 15 minutos para você concluir o pagamento do

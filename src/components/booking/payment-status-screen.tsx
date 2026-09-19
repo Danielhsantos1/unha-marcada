@@ -275,7 +275,8 @@ export function PaymentStatusScreen({ appointmentId }: { appointmentId: string }
           <DialogHeader>
             <DialogTitle>Cancelar agendamento</DialogTitle>
             <DialogDescription>
-              O horário será liberado. Essa ação não pode ser desfeita.
+              O horário será liberado. Essa ação não pode ser desfeita, e o sinal já pago não é
+              reembolsado.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
@@ -313,7 +314,9 @@ export function PaymentStatusScreen({ appointmentId }: { appointmentId: string }
               <DialogHeader>
                 <DialogTitle>Remarcar agendamento</DialogTitle>
                 <DialogDescription>
-                  {rescheduleStep === 1 ? "Escolha o novo dia." : "Escolha o novo horário."}
+                  {rescheduleStep === 1
+                    ? "Escolha o novo dia. Os dias e horários mostrados refletem a agenda do salão em tempo real."
+                    : "Escolha o novo horário."}
                 </DialogDescription>
               </DialogHeader>
 
