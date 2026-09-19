@@ -17,7 +17,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ slug
 
   const { data: tenant } = await supabase
     .from("tenants")
-    .select("id")
+    .select("id, buffer_minutes")
     .eq("slug", slug)
     .eq("is_active", true)
     .maybeSingle();
@@ -43,6 +43,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ slug
     date,
     service.duration_minutes,
     excludeAppointmentId,
+    tenant.buffer_minutes,
   );
 
   return NextResponse.json({ slots });

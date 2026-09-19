@@ -73,6 +73,7 @@ export async function getAvailableSlots(
   dateISO: string,
   durationMinutes: number,
   excludeAppointmentId?: string,
+  bufferMinutes = 0,
 ): Promise<string[]> {
   const supabase = createAdminClient();
   const dow = dayOfWeekFor(dateISO);
@@ -117,9 +118,12 @@ export async function getAvailableSlots(
   for (const appt of appointments ?? []) {
     const isActiveHold = appt.status === "CONFIRMED" || appt.hold_expires_at > nowIso;
     if (!isActiveHold) continue;
+    // O buffer só se aplica contra outros atendimentos (intervalo de
+    // limpeza/descanso) — bloqueios manuais do salão já representam
+    // exatamente o intervalo que o dono quer, sem precisar de folga extra.
     busy.push({
-      startMin: timeStringToMinutes(appt.start_time),
-      endMin: timeStringToMinutes(appt.end_time),
+      startMin: timeStringToMinutes(appt.start_time) - bufferMinutes,
+      endMin: timeStringToMinutes(appt.end_time) + bufferMinutes,
     });
   }
 

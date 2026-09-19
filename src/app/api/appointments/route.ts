@@ -73,7 +73,13 @@ export async function POST(request: Request) {
 
   // Never trust the client for scheduling logic — recompute the actual
   // available slots server-side and reject anything outside that list.
-  const availableSlots = await getAvailableSlots(tenant.id, input.date, service.duration_minutes);
+  const availableSlots = await getAvailableSlots(
+    tenant.id,
+    input.date,
+    service.duration_minutes,
+    undefined,
+    tenant.buffer_minutes,
+  );
   if (!availableSlots.includes(input.time)) {
     return NextResponse.json(
       { error: "Este horário não está mais disponível. Escolha outro." },

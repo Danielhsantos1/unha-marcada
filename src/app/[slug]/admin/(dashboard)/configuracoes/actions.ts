@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/server";
 import { requireTenantStaff } from "@/lib/admin/auth";
 import { blockedDateFormSchema } from "@/lib/validations/blocked-date";
 import { paymentSettingsFormSchema } from "@/lib/validations/payment-settings";
+import { schedulingSettingsFormSchema } from "@/lib/validations/scheduling-settings";
 
 export interface AvailabilityRowInput {
   dayOfWeek: number;
@@ -71,6 +72,24 @@ export async function deleteBlockedDateAction(slug: string, blockId: string) {
 
   const { error } = await supabase.from("blocked_dates").delete().eq("id", blockId);
   if (error) return { error: "Não foi possível remover o bloqueio." };
+
+  revalidatePath(`/${slug}/admin/configuracoes`);
+  return { error: null };
+}
+
+export async function saveSchedulingSettingsAction(slug: string, formData: unknown) {
+  const parsed = schedulingSettingsFormSchema.safeParse(formData);
+  if (!parsed.success) return { error: "Dados inválidos." };
+
+  const { tenant } = await requireTenantStaff(slug);
+  const supabase = await createClient();
+
+  const { error } = await supabase
+    .from("tenants")
+    .update({ buffer_minutes: parsed.data.bufferMinutes })
+    .eq("id", tenant.id);
+
+  if (error) return { error: "Não foi possível salvar o intervalo." };
 
   revalidatePath(`/${slug}/admin/configuracoes`);
   return { error: null };
