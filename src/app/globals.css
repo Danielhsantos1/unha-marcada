@@ -4,17 +4,23 @@
   --background: #fdfaf9;
   --foreground: #2b2320;
 
-  /* Brand palette: rosa claro, branco, nude, cinza suave */
-  --raw-rose-50: #fdf2f4;
-  --raw-rose-100: #fbe4e9;
-  --raw-rose-200: #f5c8d3;
-  --raw-rose-300: #eda3b5;
-  --raw-rose-400: #e17693;
-  --raw-rose-500: #d9536f;
-  --raw-rose-600: #c23a58;
-  --raw-rose-700: #9f2c46;
-  --raw-rose-800: #82273c;
-  --raw-rose-900: #6f2436;
+  /* Brand palette: roxo ametista premium, branco, cinza suave.
+     Segue a mesma progressão de luminosidade da paleta anterior (rosa) —
+     só o matiz mudou — então o contraste texto/fundo já validado em
+     cada variante (botão, badge, foco) continua válido sem reajuste.
+     Os tokens continuam se chamando "rose" para o Tailwind (@theme
+     abaixo) de propósito: renomear exigiria editar as ~28 telas que já
+     usam `bg-rose-500` etc., sem nenhum ganho — a cor muda igual. */
+  --raw-rose-50: #faf7fd;
+  --raw-rose-100: #f2ebfa;
+  --raw-rose-200: #e2d1f4;
+  --raw-rose-300: #cbabe9;
+  --raw-rose-400: #ab7edb;
+  --raw-rose-500: #8a56cb;
+  --raw-rose-600: #7240b0;
+  --raw-rose-700: #5c3390;
+  --raw-rose-800: #4a2a74;
+  --raw-rose-900: #3d2560;
 
   --raw-nude-50: #fbf7f2;
   --raw-nude-100: #f4ead9;
