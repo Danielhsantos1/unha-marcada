@@ -1,3 +1,4 @@
+import { Eye } from "lucide-react";
 import { requireTenantStaff } from "@/lib/admin/auth";
 import { AdminNav } from "@/components/admin/admin-nav";
 import { MobileNav } from "@/components/admin/mobile-nav";
@@ -16,9 +17,20 @@ export default async function AdminLayout({
   return (
     <div className="flex min-h-screen bg-neutral-50">
       <aside className="hidden w-64 shrink-0 flex-col border-r border-neutral-200 bg-white md:flex print:hidden">
-        <div className="flex flex-col gap-0.5 border-b border-neutral-100 px-5 py-5">
-          <span className="text-sm font-semibold text-neutral-900">{tenant.name}</span>
-          <span className="text-xs text-neutral-400">Unha Marcada · Painel</span>
+        <div className="flex flex-col gap-2 border-b border-neutral-100 px-5 py-5">
+          <div className="flex flex-col gap-0.5">
+            <span className="text-sm font-semibold text-neutral-900">{tenant.name}</span>
+            <span className="text-xs text-neutral-400">Unha Marcada · Painel</span>
+          </div>
+          <a
+            href={`/${slug}/agendar`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex w-fit items-center gap-1.5 text-xs font-medium text-rose-600 hover:underline"
+          >
+            <Eye className="h-3.5 w-3.5" />
+            Ver como cliente
+          </a>
         </div>
         <AdminNav slug={slug} className="flex flex-1 flex-col gap-1 p-3" />
         <div className="border-t border-neutral-100 p-3">

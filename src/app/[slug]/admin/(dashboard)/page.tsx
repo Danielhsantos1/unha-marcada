@@ -9,6 +9,7 @@ import {
   AlertTriangle,
   CheckCircle2,
   Clock,
+  Eye,
 } from "lucide-react";
 import { requireTenantStaff } from "@/lib/admin/auth";
 import { createClient } from "@/lib/supabase/server";
@@ -124,7 +125,18 @@ export default async function AdminDashboardPage({
 
   return (
     <div className="flex flex-col gap-6">
-      <h1 className="text-xl font-semibold text-neutral-900">Dashboard</h1>
+      <div className="flex items-center justify-between gap-2">
+        <h1 className="text-xl font-semibold text-neutral-900">Dashboard</h1>
+        <a
+          href={`/${slug}/agendar`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex shrink-0 items-center gap-1.5 rounded-full border border-neutral-200 bg-white px-3 py-1.5 text-xs font-medium text-neutral-700 transition-colors hover:bg-neutral-50"
+        >
+          <Eye className="h-3.5 w-3.5" />
+          Ver como cliente
+        </a>
+      </div>
 
       {quantidadePendencias > 0 && (
         <Link
