@@ -1,10 +1,19 @@
 import { notFound } from "next/navigation";
+import Link from "next/link";
+import { ArrowLeft } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { BookingWizard } from "@/components/booking/booking-wizard";
 import type { Service, Tenant } from "@/types/database";
 
-export default async function AgendarPage({ params }: { params: Promise<{ slug: string }> }) {
+export default async function AgendarPage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ slug: string }>;
+  searchParams: Promise<{ preview?: string }>;
+}) {
   const { slug } = await params;
+  const { preview } = await searchParams;
   const supabase = await createClient();
 
   const { data: tenant } = await supabase
@@ -24,5 +33,18 @@ export default async function AgendarPage({ params }: { params: Promise<{ slug: 
     .order("display_order")
     .returns<Service[]>();
 
-  return <BookingWizard tenantSlug={tenant.slug} services={services ?? []} />;
+  return (
+    <>
+      {preview === "admin" && (
+        <Link
+          href={`/${slug}/admin`}
+          className="flex items-center justify-center gap-1.5 bg-neutral-900 px-4 py-2 text-xs font-medium text-white"
+        >
+          <ArrowLeft className="h-3.5 w-3.5" />
+          Você está vendo como o cliente vê — voltar ao painel
+        </Link>
+      )}
+      <BookingWizard tenantSlug={tenant.slug} services={services ?? []} />
+    </>
+  );
 }
