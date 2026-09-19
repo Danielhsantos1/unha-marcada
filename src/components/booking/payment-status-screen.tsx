@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { toast } from "sonner";
-import { CheckCircle2, Clock, XCircle, Copy, Loader2 } from "lucide-react";
+import { CheckCircle2, Clock, XCircle, Copy, Loader2, Share2 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
@@ -62,6 +62,13 @@ export function PaymentStatusScreen({ appointmentId }: { appointmentId: string }
   // null = ainda não carregou; StepDate trata null/undefined como "não
   // desabilita nada" pra não piscar todos os dias fechados durante o fetch.
   const [openWeekdays, setOpenWeekdays] = useState<number[] | null>(null);
+  // Detectado só no cliente — a Web Share API não existe durante o SSR,
+  // e nem todo navegador (principalmente desktop) a suporta.
+  const [canShare, setCanShare] = useState(false);
+
+  useEffect(() => {
+    setCanShare(typeof navigator !== "undefined" && typeof navigator.share === "function");
+  }, []);
 
   const tenantSlugForAvailability = data?.appointment.tenant?.slug;
 
@@ -161,6 +168,16 @@ export function PaymentStatusScreen({ appointmentId }: { appointmentId: string }
     appointment.status === "CONFIRMED" &&
     hoursUntil(appointment.appointment_date, appointment.start_time) >= SELF_SERVICE_CUTOFF_HOURS;
 
+  async function handleShare() {
+    const text = `Meu agendamento de ${appointment.service?.name ?? "atendimento"} no ${appointment.tenant?.name ?? "salão"} está confirmado para ${formatDateBR(appointment.appointment_date)} às ${formatTimeBR(appointment.start_time)}.`;
+    try {
+      await navigator.share({ title: "Comprovante de agendamento", text, url: window.location.href });
+    } catch {
+      // Cancelado pelo usuário no seletor do sistema, ou o navegador
+      // recusou — não é um erro que precise de feedback.
+    }
+  }
+
   return (
     <div className="mx-auto flex w-full max-w-md flex-col items-center gap-6 px-6 py-12">
       {appointment.status === "PENDING_PAYMENT" && payment?.qr_code_base64 && payment.pix_copy_paste && (
@@ -212,10 +229,18 @@ export function PaymentStatusScreen({ appointmentId }: { appointmentId: string }
                 Esse é o link do seu comprovante — salva ele (ou favorita a página) pra acessar,
                 remarcar ou cancelar seu horário depois.
               </p>
-              <Button variant="outline" size="sm" onClick={handleCopyLink} className="w-fit gap-1.5">
-                <Copy className="h-3.5 w-3.5" />
-                Copiar link
-              </Button>
+              <div className="flex flex-wrap gap-2">
+                <Button variant="outline" size="sm" onClick={handleCopyLink} className="w-fit gap-1.5">
+                  <Copy className="h-3.5 w-3.5" />
+                  Copiar link
+                </Button>
+                {canShare && (
+                  <Button variant="outline" size="sm" onClick={handleShare} className="w-fit gap-1.5">
+                    <Share2 className="h-3.5 w-3.5" />
+                    Enviar comprovante
+                  </Button>
+                )}
+              </div>
             </CardContent>
           </Card>
 
