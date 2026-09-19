@@ -18,12 +18,20 @@ export default function HomePage() {
         multi-tenant: acesse a página de um salão pelo respectivo endereço, por
         exemplo, a demonstração abaixo.
       </p>
-      <Link
-        href="/studio-nude"
-        className="rounded-full bg-rose-500 px-6 py-3 text-sm font-medium text-white shadow-sm transition-colors hover:bg-rose-600"
-      >
-        Ver salão de demonstração (Studio Nude)
-      </Link>
+      <div className="flex flex-col items-center gap-3 sm:flex-row">
+        <Link
+          href="/comecar"
+          className="rounded-full bg-rose-500 px-6 py-3 text-sm font-medium text-white shadow-sm transition-colors hover:bg-rose-600"
+        >
+          Criar minha conta grátis
+        </Link>
+        <Link
+          href="/studio-nude"
+          className="rounded-full border border-neutral-200 px-6 py-3 text-sm font-medium text-neutral-700 transition-colors hover:bg-neutral-50"
+        >
+          Ver salão de demonstração
+        </Link>
+      </div>
     </main>
   );
 }
