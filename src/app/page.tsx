@@ -32,6 +32,12 @@ export default function HomePage() {
           Ver salão de demonstração
         </Link>
       </div>
+      <p className="text-sm text-neutral-400">
+        Já tem uma conta?{" "}
+        <Link href="/entrar" className="font-medium text-rose-600 hover:underline">
+          Entrar
+        </Link>
+      </p>
     </main>
   );
 }
