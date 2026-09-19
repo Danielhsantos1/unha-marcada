@@ -22,7 +22,9 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
 
   const { data: appointment } = await supabase
     .from("appointments")
-    .select("id, tenant_id, status, appointment_date, start_time, service:services(duration_minutes)")
+    .select(
+      "id, tenant_id, status, appointment_date, start_time, service:services(duration_minutes), tenant:tenants(buffer_minutes)",
+    )
     .eq("id", id)
     .maybeSingle<{
       id: string;
@@ -31,6 +33,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
       appointment_date: string;
       start_time: string;
       service: { duration_minutes: number } | null;
+      tenant: { buffer_minutes: number } | null;
     }>();
 
   if (!appointment || !appointment.service) {
@@ -59,6 +62,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
     parsed.data.date,
     durationMinutes,
     appointment.id,
+    appointment.tenant?.buffer_minutes ?? 0,
   );
 
   if (!availableSlots.includes(parsed.data.time)) {

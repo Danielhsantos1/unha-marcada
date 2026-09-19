@@ -23,6 +23,7 @@ export interface Tenant {
   phone: string | null;
   logo_url: string | null;
   primary_color: string;
+  buffer_minutes: number;
   is_active: boolean;
   created_at: string;
   updated_at: string;

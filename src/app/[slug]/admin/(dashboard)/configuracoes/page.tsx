@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { AvailabilityEditor } from "@/components/admin/availability-editor";
 import { BlockedDatesManager } from "@/components/admin/blocked-dates-manager";
 import { PaymentSettingsForm } from "@/components/admin/payment-settings-form";
+import { SchedulingSettingsForm } from "@/components/admin/scheduling-settings-form";
 import type { Availability, BlockedDate, TenantPaymentCredentials } from "@/types/database";
 
 export default async function ConfiguracoesPage({ params }: { params: Promise<{ slug: string }> }) {
@@ -44,6 +45,7 @@ export default async function ConfiguracoesPage({ params }: { params: Promise<{ 
         maskedAccessToken={maskedAccessToken}
       />
       <AvailabilityEditor slug={slug} availability={availability ?? []} />
+      <SchedulingSettingsForm slug={slug} bufferMinutes={tenant.buffer_minutes} />
       <BlockedDatesManager slug={slug} blockedDates={blockedDates ?? []} />
     </div>
   );

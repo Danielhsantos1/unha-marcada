@@ -7,10 +7,21 @@ import { getAgendaRange, type AgendaView } from "@/lib/admin/agenda-range";
 import { AgendaNav } from "@/components/admin/agenda-nav";
 import { StatusLegend } from "@/components/admin/status-legend";
 import { AppointmentCard, type AgendaAppointment } from "@/components/admin/appointment-card";
-import { cn, formatDateBR, formatTimeBR } from "@/lib/utils";
+import { cn, formatDateBR, formatSaoPauloDateTime, formatTimeBR } from "@/lib/utils";
 
 function isValidView(value: string | undefined): value is AgendaView {
   return value === "dia" || value === "semana" || value === "mes";
+}
+
+/** Day of week (0 = Sunday .. 6 = Saturday) for a "YYYY-MM-DD" date string — same rule as the availability engine. */
+function dayOfWeekFor(dateISO: string): number {
+  return new Date(`${dateISO}T12:00:00Z`).getUTCDay();
+}
+
+interface BlockInfo {
+  reason: string | null;
+  startsAt: string;
+  endsAt: string;
 }
 
 export default async function AgendaPage({
@@ -29,7 +40,7 @@ export default async function AgendaPage({
   const supabase = await createClient();
   const range = getAgendaRange(view, referenceDateISO);
 
-  const [{ data: appointments }, { data: blocks }] = await Promise.all([
+  const [{ data: appointments }, { data: blocks }, { data: availability }] = await Promise.all([
     supabase
       .from("appointments")
       .select("id, client_name, client_phone, start_time, end_time, status, appointment_date, service:services(name)")
@@ -44,7 +55,15 @@ export default async function AgendaPage({
       .eq("tenant_id", tenant.id)
       .lt("starts_at", `${range.endISO}T23:59:59.999-03:00`)
       .gt("ends_at", `${range.startISO}T00:00:00.000-03:00`),
+    supabase
+      .from("availability")
+      .select("day_of_week")
+      .eq("tenant_id", tenant.id)
+      .eq("is_active", true),
   ]);
+
+  const openWeekdays = new Set((availability ?? []).map((row) => row.day_of_week));
+  const isDateClosed = (dateISO: string) => !openWeekdays.has(dayOfWeekFor(dateISO));
 
   const appointmentsByDate = new Map<string, AgendaAppointment[]>();
   for (const appt of (appointments ?? []) as unknown as (AgendaAppointment & { appointment_date: string })[]) {
@@ -53,14 +72,18 @@ export default async function AgendaPage({
     appointmentsByDate.set(appt.appointment_date, list);
   }
 
-  const blockedDatesSet = new Set<string>();
+  const blocksByDate = new Map<string, BlockInfo[]>();
   for (const block of blocks ?? []) {
     for (const day of range.days) {
       const dayStart = new Date(`${day}T00:00:00.000-03:00`).getTime();
       const dayEnd = new Date(`${day}T23:59:59.999-03:00`).getTime();
       const blockStart = new Date(block.starts_at).getTime();
       const blockEnd = new Date(block.ends_at).getTime();
-      if (blockStart < dayEnd && blockEnd > dayStart) blockedDatesSet.add(day);
+      if (blockStart < dayEnd && blockEnd > dayStart) {
+        const list = blocksByDate.get(day) ?? [];
+        list.push({ reason: block.reason, startsAt: block.starts_at, endsAt: block.ends_at });
+        blocksByDate.set(day, list);
+      }
     }
   }
 
@@ -84,12 +107,19 @@ export default async function AgendaPage({
           slug={slug}
           dateISO={referenceDateISO}
           appointments={appointmentsByDate.get(referenceDateISO) ?? []}
-          isBlocked={blockedDatesSet.has(referenceDateISO)}
+          isClosed={isDateClosed(referenceDateISO)}
+          blocks={blocksByDate.get(referenceDateISO) ?? []}
         />
       )}
 
       {view === "semana" && (
-        <WeekView slug={slug} days={range.days} appointmentsByDate={appointmentsByDate} blockedDatesSet={blockedDatesSet} />
+        <WeekView
+          slug={slug}
+          days={range.days}
+          appointmentsByDate={appointmentsByDate}
+          blocksByDate={blocksByDate}
+          isDateClosed={isDateClosed}
+        />
       )}
 
       {view === "mes" && (
@@ -98,7 +128,8 @@ export default async function AgendaPage({
           days={range.days}
           referenceDateISO={referenceDateISO}
           appointmentsByDate={appointmentsByDate}
-          blockedDatesSet={blockedDatesSet}
+          blocksByDate={blocksByDate}
+          isDateClosed={isDateClosed}
         />
       )}
     </div>
@@ -109,22 +140,36 @@ function DayView({
   slug,
   dateISO,
   appointments,
-  isBlocked,
+  isClosed,
+  blocks,
 }: {
   slug: string;
   dateISO: string;
   appointments: AgendaAppointment[];
-  isBlocked: boolean;
+  isClosed: boolean;
+  blocks: BlockInfo[];
 }) {
   return (
     <div className="flex flex-col gap-3 rounded-2xl border border-neutral-200 bg-white p-4">
       <p className="text-sm font-medium text-neutral-700">{formatDateBR(dateISO)}</p>
 
-      {isBlocked && (
+      {isClosed && (
         <div className="rounded-lg border border-neutral-300 bg-neutral-100 px-3 py-2 text-xs text-neutral-600">
-          Este dia tem horários bloqueados.
+          🔒 Salão fechado neste dia.
         </div>
       )}
+
+      {!isClosed &&
+        blocks.map((block, i) => (
+          <div
+            key={i}
+            className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800"
+          >
+            🔒 Agenda bloqueada ({formatSaoPauloDateTime(block.startsAt).time} –{" "}
+            {formatSaoPauloDateTime(block.endsAt).time})
+            {block.reason && <span className="block text-amber-700">Motivo: {block.reason}</span>}
+          </div>
+        ))}
 
       {appointments.length === 0 ? (
         <p className="py-8 text-center text-sm text-neutral-400">Nenhum agendamento neste dia.</p>
@@ -143,12 +188,14 @@ function WeekView({
   slug,
   days,
   appointmentsByDate,
-  blockedDatesSet,
+  blocksByDate,
+  isDateClosed,
 }: {
   slug: string;
   days: string[];
   appointmentsByDate: Map<string, AgendaAppointment[]>;
-  blockedDatesSet: Set<string>;
+  blocksByDate: Map<string, BlockInfo[]>;
+  isDateClosed: (dateISO: string) => boolean;
 }) {
   return (
     <div className="grid gap-3 overflow-x-auto sm:grid-cols-2 lg:grid-cols-7">
@@ -157,10 +204,16 @@ function WeekView({
           <p className="text-xs font-medium capitalize text-neutral-500">
             {format(new Date(`${day}T12:00:00Z`), "EEE, d MMM", { locale: ptBR })}
           </p>
-          {blockedDatesSet.has(day) && (
+          {isDateClosed(day) ? (
             <span className="w-fit rounded-full bg-neutral-100 px-2 py-0.5 text-[10px] text-neutral-500">
-              Bloqueado
+              🔒 Fechado
             </span>
+          ) : (
+            (blocksByDate.get(day) ?? []).length > 0 && (
+              <span className="w-fit rounded-full bg-amber-50 px-2 py-0.5 text-[10px] text-amber-700">
+                🔒 Bloqueado
+              </span>
+            )
           )}
           <div className="flex flex-col gap-1.5">
             {(appointmentsByDate.get(day) ?? []).map((appt) => (
@@ -181,13 +234,15 @@ function MonthView({
   days,
   referenceDateISO,
   appointmentsByDate,
-  blockedDatesSet,
+  blocksByDate,
+  isDateClosed,
 }: {
   slug: string;
   days: string[];
   referenceDateISO: string;
   appointmentsByDate: Map<string, AgendaAppointment[]>;
-  blockedDatesSet: Set<string>;
+  blocksByDate: Map<string, BlockInfo[]>;
+  isDateClosed: (dateISO: string) => boolean;
 }) {
   const currentMonth = referenceDateISO.slice(0, 7);
 
@@ -215,7 +270,10 @@ function MonthView({
           >
             <div className="flex items-center justify-between">
               <span className="text-[11px] font-medium text-neutral-700 sm:text-xs">{dayNumber}</span>
-              {blockedDatesSet.has(day) && <span className="h-1.5 w-1.5 rounded-full bg-neutral-400" />}
+              {isDateClosed(day) && <span className="h-1.5 w-1.5 rounded-full bg-neutral-400" />}
+              {!isDateClosed(day) && (blocksByDate.get(day) ?? []).length > 0 && (
+                <span className="h-1.5 w-1.5 rounded-full bg-amber-400" />
+              )}
             </div>
 
             {/* Phones: just a dot so the day stays tappable and legible — the full list only fits from sm: up. */}
