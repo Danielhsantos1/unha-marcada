@@ -1,9 +1,9 @@
 import { ImageResponse } from "next/og";
 
-const ROSE = "#D9536F";
+const BRAND_VIOLET = "#8a56cb";
 
 /**
- * One shared glyph (rounded rose square, white "U") reused by every
+ * One shared glyph (rounded violet square, white "U") reused by every
  * generated icon — favicon, apple touch icon, and the PWA manifest icons.
  * Renders through next/og (Satori), no image assets or extra deps needed.
  */
@@ -14,7 +14,7 @@ export function renderBrandIcon(size: number, radius: number) {
         style={{
           width: size,
           height: size,
-          background: ROSE,
+          background: BRAND_VIOLET,
           borderRadius: radius,
           display: "flex",
           alignItems: "center",
