@@ -59,6 +59,21 @@ export function PaymentStatusScreen({ appointmentId }: { appointmentId: string }
   const [rescheduleDate, setRescheduleDate] = useState<string | null>(null);
   const [rescheduleTime, setRescheduleTime] = useState<string | null>(null);
   const [isRescheduling, setIsRescheduling] = useState(false);
+  // null = ainda não carregou; StepDate trata null/undefined como "não
+  // desabilita nada" pra não piscar todos os dias fechados durante o fetch.
+  const [openWeekdays, setOpenWeekdays] = useState<number[] | null>(null);
+
+  const tenantSlugForAvailability = data?.appointment.tenant?.slug;
+
+  useEffect(() => {
+    if (!tenantSlugForAvailability) return;
+    fetch(`/api/tenants/${tenantSlugForAvailability}/availability`)
+      .then((res) => (res.ok ? res.json() : null))
+      .then((json) => {
+        if (json) setOpenWeekdays(json.openWeekdays ?? []);
+      })
+      .catch(() => {});
+  }, [tenantSlugForAvailability]);
 
   const refresh = useCallback(async () => {
     const response = await fetch(`/api/appointments/${appointmentId}/status`, {
@@ -303,7 +318,11 @@ export function PaymentStatusScreen({ appointmentId }: { appointmentId: string }
               </DialogHeader>
 
               {rescheduleStep === 1 && (
-                <StepDate selectedDate={rescheduleDate} onSelect={setRescheduleDate} />
+                <StepDate
+                  selectedDate={rescheduleDate}
+                  onSelect={setRescheduleDate}
+                  openWeekdays={openWeekdays ?? undefined}
+                />
               )}
 
               {rescheduleStep === 2 && appointment.service && rescheduleDate && (
