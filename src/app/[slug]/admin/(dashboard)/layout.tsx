@@ -23,17 +23,17 @@ export default async function AdminLayout({
         <AdminNav slug={slug} className="flex flex-1 flex-col gap-1 p-3" />
         <div className="border-t border-neutral-100 p-3">
           <p className="mb-2 truncate px-2 text-xs text-neutral-400">{profile.full_name}</p>
-          <LogoutButton slug={slug} />
+          <LogoutButton slug={slug} className="w-full" />
         </div>
       </aside>
 
       <div className="flex min-w-0 flex-1 flex-col">
         <header className="flex items-center justify-between gap-2 border-b border-neutral-200 bg-white px-2 py-2 md:hidden print:hidden">
-          <div className="flex min-w-0 items-center gap-1">
+          <div className="flex min-w-0 flex-1 items-center gap-1">
             <MobileNav slug={slug} tenantName={tenant.name} />
             <span className="truncate text-sm font-semibold text-neutral-900">{tenant.name}</span>
           </div>
-          <LogoutButton slug={slug} />
+          <LogoutButton slug={slug} className="shrink-0" />
         </header>
 
         <main className="min-w-0 flex-1 p-4 sm:p-6 print:p-0">{children}</main>
