@@ -1,11 +1,15 @@
 "use client";
 
-import { Check } from "lucide-react";
-import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { SERVICE_CATEGORY_LABELS } from "@/lib/constants";
+import { Check, Hand, Footprints, Sparkles, Clock } from "lucide-react";
 import { cn, formatBRL } from "@/lib/utils";
+import { SERVICE_CATEGORY_LABELS } from "@/lib/constants";
 import type { Service, ServiceCategory } from "@/types/database";
+
+const CATEGORY_ICON: Record<ServiceCategory, typeof Hand> = {
+  maos: Hand,
+  pes: Footprints,
+  combo: Sparkles,
+};
 
 export function StepService({
   services,
@@ -25,71 +29,85 @@ export function StepService({
     .filter((group) => group.items.length > 0);
 
   return (
-    <div className="flex flex-col gap-6">
-      <h2 className="text-center text-xl font-semibold text-neutral-900">
-        Qual serviço você deseja?
-      </h2>
+    <div className="flex flex-col gap-7">
+      <div className="flex flex-col items-center gap-1 text-center">
+        <h2 className="text-xl font-semibold text-neutral-900">Qual serviço você deseja?</h2>
+        <p className="text-sm text-neutral-500">Escolha um serviço pra ver os horários disponíveis.</p>
+      </div>
 
-      {groups.map((group) => (
-        <div key={group.category}>
-          <Badge variant="secondary" className="mb-3">
-            {SERVICE_CATEGORY_LABELS[group.category]}
-          </Badge>
-          <div className="grid gap-3 sm:grid-cols-2">
-            {group.items.map((service) => {
-              const isSelected = service.id === selectedServiceId;
-              return (
-                <Card
-                  key={service.id}
-                  role="button"
-                  tabIndex={0}
-                  onClick={() => onSelect(service)}
-                  onKeyDown={(event) => {
-                    if (event.key === "Enter" || event.key === " ") onSelect(service);
-                  }}
-                  className={cn(
-                    "cursor-pointer border-neutral-200 transition-all hover:border-rose-300",
-                    isSelected && "border-rose-500 bg-rose-50/60",
-                  )}
-                >
-                  <CardContent className="flex items-start justify-between gap-4 p-4">
-                    <div className="min-w-0">
-                      <p className="font-medium text-neutral-900">{service.name}</p>
-                      {service.description && (
-                        <p className="mt-1 text-sm text-neutral-500">{service.description}</p>
+      {groups.map((group) => {
+        const CategoryIcon = CATEGORY_ICON[group.category];
+        return (
+          <div key={group.category} className="flex flex-col gap-3">
+            <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-neutral-400">
+              <CategoryIcon className="h-3.5 w-3.5" />
+              {SERVICE_CATEGORY_LABELS[group.category]}
+            </div>
+            <div className="grid gap-3 sm:grid-cols-2">
+              {group.items.map((service) => {
+                const isSelected = service.id === selectedServiceId;
+                return (
+                  <div
+                    key={service.id}
+                    role="button"
+                    tabIndex={0}
+                    onClick={() => onSelect(service)}
+                    onKeyDown={(event) => {
+                      if (event.key === "Enter" || event.key === " ") onSelect(service);
+                    }}
+                    className={cn(
+                      "group relative flex cursor-pointer gap-3 rounded-2xl border bg-white p-4 text-left shadow-sm transition-all",
+                      isSelected
+                        ? "border-rose-500 ring-1 ring-rose-500"
+                        : "border-neutral-200 hover:border-rose-300 hover:shadow-md",
+                    )}
+                  >
+                    <span
+                      className={cn(
+                        "flex h-10 w-10 shrink-0 items-center justify-center rounded-xl transition-colors",
+                        isSelected ? "bg-rose-500 text-white" : "bg-rose-50 text-rose-500",
                       )}
-                      <p className="mt-1 text-xs text-neutral-400">
-                        {service.duration_minutes} min · sinal de {service.deposit_percentage}%
-                      </p>
+                    >
+                      <CategoryIcon className="h-5 w-5" />
+                    </span>
+
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-start justify-between gap-2">
+                        <p className="font-medium leading-tight text-neutral-900">{service.name}</p>
+                        <p className="shrink-0 whitespace-nowrap font-semibold text-neutral-900">
+                          {formatBRL(service.price_cents)}
+                        </p>
+                      </div>
+                      {service.description && (
+                        <p className="mt-1 line-clamp-2 text-sm text-neutral-500">
+                          {service.description}
+                        </p>
+                      )}
+                      <div className="mt-2 flex items-center justify-between gap-2">
+                        <span className="flex items-center gap-1.5 text-xs text-neutral-400">
+                          <Clock className="h-3 w-3" />
+                          {service.duration_minutes} min · sinal de {service.deposit_percentage}%
+                        </span>
+                        <span
+                          aria-hidden
+                          className={cn(
+                            "flex h-5 w-5 shrink-0 items-center justify-center rounded-full border transition-colors",
+                            isSelected
+                              ? "border-rose-500 bg-rose-500 text-white"
+                              : "border-neutral-200 bg-white",
+                          )}
+                        >
+                          {isSelected && <Check className="h-3 w-3" strokeWidth={3} />}
+                        </span>
+                      </div>
                     </div>
-                    <div className="flex shrink-0 flex-col items-end gap-2">
-                      <p
-                        className={cn(
-                          "whitespace-nowrap font-semibold",
-                          isSelected ? "text-rose-600" : "text-neutral-900",
-                        )}
-                      >
-                        {formatBRL(service.price_cents)}
-                      </p>
-                      <span
-                        aria-hidden
-                        className={cn(
-                          "flex h-5 w-5 items-center justify-center rounded-full border transition-colors",
-                          isSelected
-                            ? "border-rose-500 bg-rose-500 text-white"
-                            : "border-neutral-300 bg-white",
-                        )}
-                      >
-                        {isSelected && <Check className="h-3 w-3" strokeWidth={3} />}
-                      </span>
-                    </div>
-                  </CardContent>
-                </Card>
-              );
-            })}
+                  </div>
+                );
+              })}
+            </div>
           </div>
-        </div>
-      ))}
+        );
+      })}
     </div>
   );
 }
