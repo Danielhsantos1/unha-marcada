@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { Store } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import type { AgendaAppointment } from "@/components/admin/appointment-card";
 import { CancelAppointmentButton } from "@/components/admin/cancel-appointment-button";
@@ -65,8 +66,8 @@ export function AgendaMonthView({
   const selectedLabel = format(new Date(`${selected}T12:00:00Z`), "EEE · d MMM", { locale: ptBR }).toUpperCase();
 
   return (
-    <div className="flex flex-col gap-4">
-      <div className="grid grid-cols-7 gap-2">
+    <div className="flex min-w-0 flex-col gap-4">
+      <div className="grid min-w-0 grid-cols-7 gap-2">
         {WEEKDAY_LABELS.map((label) => (
           <div key={label} className="text-center text-[10px] font-medium text-neutral-400 sm:text-xs">
             {label}
@@ -87,7 +88,7 @@ export function AgendaMonthView({
               type="button"
               onClick={() => setSelected(day)}
               className={cn(
-                "flex h-[68px] flex-col items-start gap-1 rounded-xl border p-2 text-left transition-colors sm:h-20",
+                "flex h-[68px] min-w-0 flex-col items-start gap-1 overflow-hidden rounded-xl border p-1.5 text-left transition-colors sm:h-20 sm:p-2",
                 isClosed
                   ? "border-transparent bg-neutral-400 text-white"
                   : "border-neutral-200 bg-white hover:border-rose-300",
@@ -100,12 +101,12 @@ export function AgendaMonthView({
                 {dayNumber}
               </span>
               {isClosed ? (
-                <span className="text-[10px] sm:text-xs">• Fechado</span>
+                <Store className="h-3.5 w-3.5 shrink-0 opacity-80" aria-label="Fechado" />
               ) : count > 0 ? (
-                <span className="text-[10px] font-medium text-rose-700 sm:text-xs">• {count}</span>
+                <span className="w-full truncate text-[10px] font-medium text-rose-700 sm:text-xs">• {count}</span>
               ) : null}
               {isToday && (
-                <span className="mt-auto w-fit rounded-full bg-rose-600 px-2 py-0.5 text-[9px] font-medium text-white sm:text-[10px]">
+                <span className="mt-auto w-fit max-w-full truncate rounded-full bg-rose-600 px-1.5 py-0.5 text-[8px] font-medium text-white sm:px-2 sm:text-[10px]">
                   Hoje
                 </span>
               )}
