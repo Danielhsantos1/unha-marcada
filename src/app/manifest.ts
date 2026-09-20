@@ -11,8 +11,8 @@ export default function manifest(): MetadataRoute.Manifest {
     description: "Agendamento de manicure e pedicure com sinal via PIX.",
     start_url: "/",
     display: "standalone",
-    background_color: "#fdfaf9",
-    theme_color: "#8a56cb",
+    background_color: "#f8f7ff",
+    theme_color: "#7c5cfc",
     icons: [
       { src: "/icon-192", sizes: "192x192", type: "image/png", purpose: "any" },
       { src: "/icon-512", sizes: "512x512", type: "image/png", purpose: "any" },

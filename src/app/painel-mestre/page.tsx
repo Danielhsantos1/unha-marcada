@@ -39,7 +39,7 @@ export default async function PainelMestrePage() {
         </p>
 
         {(tenants ?? []).length === 0 ? (
-          <p className="rounded-2xl border border-neutral-200 bg-white py-8 text-center text-neutral-400">
+          <p className="rounded-2xl border border-neutral-200 bg-white py-8 text-center text-neutral-400 shadow-sm">
             Nenhum salão cadastrado ainda.
           </p>
         ) : (
@@ -50,7 +50,7 @@ export default async function PainelMestrePage() {
               {(tenants ?? []).map((tenant) => (
                 <div
                   key={tenant.id}
-                  className="flex flex-col gap-2 rounded-2xl border border-neutral-200 bg-white p-4"
+                  className="flex flex-col gap-2 rounded-2xl border border-neutral-200 bg-white p-4 shadow-sm"
                 >
                   <div className="flex items-start justify-between gap-2">
                     <p className="font-medium text-neutral-900">{tenant.name}</p>
