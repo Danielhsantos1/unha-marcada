@@ -1,14 +1,15 @@
 import Link from "next/link";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { Lock } from "lucide-react";
 import { requireTenantStaff } from "@/lib/admin/auth";
 import { createClient } from "@/lib/supabase/server";
 import { getAgendaRange, type AgendaView } from "@/lib/admin/agenda-range";
 import { AgendaNav } from "@/components/admin/agenda-nav";
-import { StatusLegend } from "@/components/admin/status-legend";
-import { AppointmentCard, type AgendaAppointment } from "@/components/admin/appointment-card";
+import { AgendaFilterableView, type FlatBlock } from "@/components/admin/agenda-filterable-view";
+import type { AgendaAppointment } from "@/components/admin/appointment-card";
 import { NewAppointmentDialog } from "@/components/admin/new-appointment-dialog";
-import { cn, formatDateBR, formatSaoPauloDateTime, formatTimeBR } from "@/lib/utils";
+import { cn, formatTimeBR } from "@/lib/utils";
 import type { Service } from "@/types/database";
 
 function isValidView(value: string | undefined): value is AgendaView {
@@ -18,6 +19,20 @@ function isValidView(value: string | undefined): value is AgendaView {
 /** Day of week (0 = Sunday .. 6 = Saturday) for a "YYYY-MM-DD" date string — same rule as the availability engine. */
 function dayOfWeekFor(dateISO: string): number {
   return new Date(`${dateISO}T12:00:00Z`).getUTCDay();
+}
+
+/** "14 – 20 de set." (semana), "15 de setembro" (dia) ou "Setembro de 2026" (mês). */
+function formatRangeLabel(view: AgendaView, referenceDateISO: string, days: string[]): string {
+  if (view === "dia") {
+    return format(new Date(`${referenceDateISO}T12:00:00Z`), "d 'de' MMMM", { locale: ptBR });
+  }
+  if (view === "mes") {
+    const label = format(new Date(`${referenceDateISO}T12:00:00Z`), "MMMM 'de' yyyy", { locale: ptBR });
+    return label.charAt(0).toUpperCase() + label.slice(1);
+  }
+  const start = new Date(`${days[0]}T12:00:00Z`);
+  const end = new Date(`${days[days.length - 1]}T12:00:00Z`);
+  return `${format(start, "d")} – ${format(end, "d 'de' MMM", { locale: ptBR })}`;
 }
 
 interface BlockInfo {
@@ -37,6 +52,7 @@ export default async function AgendaPage({
   const query = await searchParams;
   const view: AgendaView = isValidView(query.view) ? query.view : "dia";
   const referenceDateISO = query.data && /^\d{4}-\d{2}-\d{2}$/.test(query.data) ? query.data : format(new Date(), "yyyy-MM-dd");
+  const todayISO = format(new Date(), "yyyy-MM-dd");
 
   const { tenant } = await requireTenantStaff(slug);
   const supabase = await createClient();
@@ -46,7 +62,9 @@ export default async function AgendaPage({
     await Promise.all([
       supabase
         .from("appointments")
-        .select("id, client_name, client_phone, start_time, end_time, status, appointment_date, service:services(name)")
+        .select(
+          "id, client_name, client_phone, start_time, end_time, status, appointment_date, total_price_cents, service:services(name)",
+        )
         .eq("tenant_id", tenant.id)
         .gte("appointment_date", range.startISO)
         .lte("appointment_date", range.endISO)
@@ -74,13 +92,9 @@ export default async function AgendaPage({
 
   const openWeekdays = new Set((availability ?? []).map((row) => row.day_of_week));
   const isDateClosed = (dateISO: string) => !openWeekdays.has(dayOfWeekFor(dateISO));
+  const closedDays = range.days.filter(isDateClosed);
 
-  const appointmentsByDate = new Map<string, AgendaAppointment[]>();
-  for (const appt of (appointments ?? []) as unknown as (AgendaAppointment & { appointment_date: string })[]) {
-    const list = appointmentsByDate.get(appt.appointment_date) ?? [];
-    list.push(appt);
-    appointmentsByDate.set(appt.appointment_date, list);
-  }
+  const flatAppointments = (appointments ?? []) as unknown as (AgendaAppointment & { appointment_date: string })[];
 
   const blocksByDate = new Map<string, BlockInfo[]>();
   for (const block of blocks ?? []) {
@@ -96,42 +110,48 @@ export default async function AgendaPage({
       }
     }
   }
+  const flatBlocks: FlatBlock[] = [...blocksByDate.entries()].flatMap(([date, list]) =>
+    list.map((block) => ({ ...block, date })),
+  );
+
+  const appointmentsByDate = new Map<string, (AgendaAppointment & { appointment_date: string })[]>();
+  for (const appt of flatAppointments) {
+    const list = appointmentsByDate.get(appt.appointment_date) ?? [];
+    list.push(appt);
+    appointmentsByDate.set(appt.appointment_date, list);
+  }
 
   return (
     <div className="flex flex-col gap-5">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <h1 className="text-xl font-semibold text-neutral-900">Agenda</h1>
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap gap-3">
           <Link
             href={`/${slug}/admin/configuracoes`}
-            className="text-xs font-medium text-rose-600 hover:underline"
+            className="flex h-12 shrink-0 items-center justify-center gap-1.5 rounded-full border border-rose-300 bg-white px-6 text-sm font-medium text-rose-700 transition-colors hover:bg-rose-50"
           >
+            <Lock className="h-4 w-4" />
             Bloquear horário
           </Link>
           <NewAppointmentDialog slug={slug} services={services ?? []} />
         </div>
       </div>
 
-      <AgendaNav slug={slug} view={view} referenceDateISO={referenceDateISO} />
-      <StatusLegend />
+      <AgendaNav
+        slug={slug}
+        view={view}
+        referenceDateISO={referenceDateISO}
+        rangeLabel={formatRangeLabel(view, referenceDateISO, range.days)}
+      />
 
-      {view === "dia" && (
-        <DayView
-          slug={slug}
-          dateISO={referenceDateISO}
-          appointments={appointmentsByDate.get(referenceDateISO) ?? []}
-          isClosed={isDateClosed(referenceDateISO)}
-          blocks={blocksByDate.get(referenceDateISO) ?? []}
-        />
-      )}
-
-      {view === "semana" && (
-        <WeekView
+      {(view === "dia" || view === "semana") && (
+        <AgendaFilterableView
           slug={slug}
           days={range.days}
-          appointmentsByDate={appointmentsByDate}
-          blocksByDate={blocksByDate}
-          isDateClosed={isDateClosed}
+          todayISO={todayISO}
+          appointments={flatAppointments}
+          blocks={flatBlocks}
+          closedDays={closedDays}
         />
       )}
 
@@ -149,99 +169,6 @@ export default async function AgendaPage({
   );
 }
 
-function DayView({
-  slug,
-  dateISO,
-  appointments,
-  isClosed,
-  blocks,
-}: {
-  slug: string;
-  dateISO: string;
-  appointments: AgendaAppointment[];
-  isClosed: boolean;
-  blocks: BlockInfo[];
-}) {
-  return (
-    <div className="flex flex-col gap-3 rounded-2xl border border-neutral-200 bg-white p-4">
-      <p className="text-sm font-medium text-neutral-700">{formatDateBR(dateISO)}</p>
-
-      {isClosed && (
-        <div className="rounded-lg border border-neutral-300 bg-neutral-100 px-3 py-2 text-xs text-neutral-600">
-          🔒 Salão fechado neste dia.
-        </div>
-      )}
-
-      {!isClosed &&
-        blocks.map((block, i) => (
-          <div
-            key={i}
-            className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800"
-          >
-            🔒 Agenda bloqueada ({formatSaoPauloDateTime(block.startsAt).time} –{" "}
-            {formatSaoPauloDateTime(block.endsAt).time})
-            {block.reason && <span className="block text-amber-700">Motivo: {block.reason}</span>}
-          </div>
-        ))}
-
-      {appointments.length === 0 ? (
-        <p className="py-8 text-center text-sm text-neutral-400">Nenhum agendamento neste dia.</p>
-      ) : (
-        <div className="flex flex-col gap-2">
-          {appointments.map((appt) => (
-            <AppointmentCard key={appt.id} slug={slug} appointment={appt} />
-          ))}
-        </div>
-      )}
-    </div>
-  );
-}
-
-function WeekView({
-  slug,
-  days,
-  appointmentsByDate,
-  blocksByDate,
-  isDateClosed,
-}: {
-  slug: string;
-  days: string[];
-  appointmentsByDate: Map<string, AgendaAppointment[]>;
-  blocksByDate: Map<string, BlockInfo[]>;
-  isDateClosed: (dateISO: string) => boolean;
-}) {
-  return (
-    <div className="grid gap-3 overflow-x-auto sm:grid-cols-2 lg:grid-cols-7">
-      {days.map((day) => (
-        <div key={day} className="flex min-w-[160px] flex-col gap-2 rounded-2xl border border-neutral-200 bg-white p-3">
-          <p className="text-xs font-medium capitalize text-neutral-500">
-            {format(new Date(`${day}T12:00:00Z`), "EEE, d MMM", { locale: ptBR })}
-          </p>
-          {isDateClosed(day) ? (
-            <span className="w-fit rounded-full bg-neutral-100 px-2 py-0.5 text-[10px] text-neutral-500">
-              🔒 Fechado
-            </span>
-          ) : (
-            (blocksByDate.get(day) ?? []).length > 0 && (
-              <span className="w-fit rounded-full bg-amber-50 px-2 py-0.5 text-[10px] text-amber-700">
-                🔒 Bloqueado
-              </span>
-            )
-          )}
-          <div className="flex flex-col gap-1.5">
-            {(appointmentsByDate.get(day) ?? []).map((appt) => (
-              <AppointmentCard key={appt.id} slug={slug} appointment={appt} compact />
-            ))}
-            {(appointmentsByDate.get(day) ?? []).length === 0 && (
-              <p className="text-xs text-neutral-300">—</p>
-            )}
-          </div>
-        </div>
-      ))}
-    </div>
-  );
-}
-
 function MonthView({
   slug,
   days,
@@ -253,7 +180,7 @@ function MonthView({
   slug: string;
   days: string[];
   referenceDateISO: string;
-  appointmentsByDate: Map<string, AgendaAppointment[]>;
+  appointmentsByDate: Map<string, (AgendaAppointment & { appointment_date: string })[]>;
   blocksByDate: Map<string, BlockInfo[]>;
   isDateClosed: (dateISO: string) => boolean;
 }) {
@@ -277,7 +204,7 @@ function MonthView({
             key={day}
             href={`/${slug}/admin/agenda?view=dia&data=${day}`}
             className={cn(
-              "flex min-h-12 flex-col gap-1 rounded-lg border border-neutral-200 bg-white p-1 text-left hover:border-rose-300 sm:min-h-20 sm:rounded-xl sm:p-2",
+              "flex min-h-12 flex-col gap-1 rounded-xl border border-neutral-200 bg-white p-1 text-left shadow-sm transition-colors hover:border-rose-300 sm:min-h-20 sm:p-2",
               !inMonth && "opacity-40",
             )}
           >

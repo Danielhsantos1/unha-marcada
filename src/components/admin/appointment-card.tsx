@@ -1,5 +1,11 @@
-import { APPOINTMENT_STATUS_COLORS, APPOINTMENT_STATUS_LABELS } from "@/lib/constants";
-import { formatTimeBR } from "@/lib/utils";
+import { User, Scissors } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import {
+  APPOINTMENT_STATUS_BORDER_HEX,
+  APPOINTMENT_STATUS_COLORS,
+  APPOINTMENT_STATUS_LABELS,
+} from "@/lib/constants";
+import { formatBRL, formatTimeBR } from "@/lib/utils";
 import { CancelAppointmentButton } from "@/components/admin/cancel-appointment-button";
 import { CompleteAppointmentButton } from "@/components/admin/complete-appointment-button";
 import type { AppointmentStatus } from "@/types/database";
@@ -11,41 +17,46 @@ export interface AgendaAppointment {
   start_time: string;
   end_time: string;
   status: AppointmentStatus;
+  total_price_cents: number;
   service: { name: string } | null;
 }
 
-export function AppointmentCard({
-  slug,
-  appointment,
-  compact,
-}: {
-  slug: string;
-  appointment: AgendaAppointment;
-  compact?: boolean;
-}) {
+export function AppointmentCard({ slug, appointment }: { slug: string; appointment: AgendaAppointment }) {
   const canCancel = appointment.status === "PENDING_PAYMENT" || appointment.status === "CONFIRMED";
   const canComplete = appointment.status === "CONFIRMED";
 
   return (
     <div
-      className={`flex items-center justify-between gap-2 rounded-lg border px-3 py-2 text-xs ${APPOINTMENT_STATUS_COLORS[appointment.status]}`}
+      className="rounded-xl border-2 bg-white p-3"
+      style={{ borderColor: APPOINTMENT_STATUS_BORDER_HEX[appointment.status] }}
     >
-      <div className="min-w-0">
-        <p className="font-semibold">
-          {formatTimeBR(appointment.start_time)}–{formatTimeBR(appointment.end_time)}
-        </p>
-        <p className="truncate">{appointment.client_name}</p>
-        {!compact && <p className="truncate opacity-80">{appointment.service?.name}</p>}
+      <div className="flex items-center justify-between gap-2">
+        <span className="font-bold text-neutral-900">
+          {formatTimeBR(appointment.start_time)} – {formatTimeBR(appointment.end_time)}
+        </span>
+        <Badge className={APPOINTMENT_STATUS_COLORS[appointment.status]}>
+          {APPOINTMENT_STATUS_LABELS[appointment.status]}
+        </Badge>
       </div>
-      <div className="flex shrink-0 items-center gap-1">
-        {!compact && (
-          <span className="hidden rounded-full bg-white/60 px-2 py-0.5 sm:inline">
-            {APPOINTMENT_STATUS_LABELS[appointment.status]}
-          </span>
-        )}
-        {canComplete && <CompleteAppointmentButton slug={slug} appointmentId={appointment.id} />}
-        {canCancel && <CancelAppointmentButton slug={slug} appointmentId={appointment.id} />}
+
+      <div className="mt-1.5 flex items-center gap-1.5 text-sm font-medium text-neutral-800">
+        <User className="h-3.5 w-3.5 shrink-0 text-neutral-400" />
+        <span className="truncate">{appointment.client_name}</span>
       </div>
+
+      <div className="mt-0.5 flex items-center gap-1.5 text-sm text-neutral-500">
+        <Scissors className="h-3.5 w-3.5 shrink-0 text-neutral-400" />
+        <span className="truncate">
+          {appointment.service?.name ?? "Serviço"} • {formatBRL(appointment.total_price_cents)}
+        </span>
+      </div>
+
+      {(canComplete || canCancel) && (
+        <div className="mt-2.5 flex items-center gap-1 border-t border-neutral-100 pt-2">
+          {canComplete && <CompleteAppointmentButton slug={slug} appointmentId={appointment.id} />}
+          {canCancel && <CancelAppointmentButton slug={slug} appointmentId={appointment.id} />}
+        </div>
+      )}
     </div>
   );
 }

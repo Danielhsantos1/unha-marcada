@@ -96,7 +96,7 @@ export function NewAppointmentDialog({ slug, services }: { slug: string; service
       }}
     >
       <DialogTrigger asChild>
-        <Button size="sm" className="gap-1.5">
+        <Button size="lg" className="h-12 gap-1.5 bg-rose-700 hover:bg-rose-800">
           <Plus className="h-4 w-4" />
           Novo agendamento
         </Button>

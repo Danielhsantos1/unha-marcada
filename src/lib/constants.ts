@@ -34,6 +34,20 @@ export const APPOINTMENT_STATUS_COLORS: Record<AppointmentStatus, string> = {
   EXPIRED: "bg-neutral-200 text-neutral-600 border-neutral-300",
 };
 
+/**
+ * Cor sólida por status, em hex — usada na borda do AppointmentCard via
+ * `style` inline. Tailwind não dá pra interpolar em runtime sem safelist,
+ * então esses valores espelham manualmente os mesmos tons de
+ * APPOINTMENT_STATUS_COLORS (emerald/amber/blue/red/neutral-600).
+ */
+export const APPOINTMENT_STATUS_BORDER_HEX: Record<AppointmentStatus, string> = {
+  PENDING_PAYMENT: "#f59e0b",
+  CONFIRMED: "#059669",
+  COMPLETED: "#2563eb",
+  CANCELLED: "#dc2626",
+  EXPIRED: "#a3a3a3",
+};
+
 export const PAYMENT_STATUS_LABELS: Record<PaymentStatus, string> = {
   PENDING: "Pendente",
   PAID: "Pago",
