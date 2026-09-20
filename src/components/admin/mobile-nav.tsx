@@ -3,16 +3,14 @@
 import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Menu, Eye, MessageCircle } from "lucide-react";
+import { Menu } from "lucide-react";
 import { Sheet, SheetTrigger, SheetContent, SheetClose } from "@/components/ui/sheet";
 import { adminNavItems } from "@/lib/admin/nav-items";
-import { buildBookingShareLink } from "@/lib/whatsapp";
 import { cn } from "@/lib/utils";
 
 export function MobileNav({ slug, tenantName }: { slug: string; tenantName: string }) {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
-  const bookingUrl = `${process.env.NEXT_PUBLIC_SITE_URL ?? ""}/${slug}/agendar`;
 
   return (
     <Sheet open={open} onOpenChange={setOpen}>
@@ -26,29 +24,8 @@ export function MobileNav({ slug, tenantName }: { slug: string; tenantName: stri
         </button>
       </SheetTrigger>
       <SheetContent side="left">
-        <div className="mb-4 flex flex-col gap-2 px-2 pt-1">
-          <div>
-            <p className="text-sm font-semibold text-neutral-900">{tenantName}</p>
-            <p className="text-xs text-neutral-400">Unha Marcada · Painel</p>
-          </div>
-          <a
-            href={`/${slug}/agendar?preview=admin`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex w-fit items-center gap-1.5 text-xs font-medium text-rose-600 hover:underline"
-          >
-            <Eye className="h-3.5 w-3.5" />
-            Ver como cliente
-          </a>
-          <a
-            href={buildBookingShareLink(tenantName, bookingUrl)}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex w-fit items-center gap-1.5 text-xs font-medium text-rose-600 hover:underline"
-          >
-            <MessageCircle className="h-3.5 w-3.5" />
-            Enviar link de agendamento por WhatsApp
-          </a>
+        <div className="mb-4 px-2 pt-1">
+          <p className="text-sm font-semibold text-neutral-900">{tenantName}</p>
         </div>
         <nav className="flex flex-1 flex-col gap-1">
           {adminNavItems(slug).map(({ href, label, icon: Icon, exact }) => {
