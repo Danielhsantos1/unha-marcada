@@ -19,7 +19,7 @@ export function AdminNav({ slug, className }: { slug: string; className?: string
             className={cn(
               "flex shrink-0 items-center gap-2.5 whitespace-nowrap rounded-xl px-3 py-2 text-sm font-medium transition-colors",
               isActive
-                ? "bg-rose-50 text-rose-700"
+                ? "bg-rose-500 text-white shadow-sm"
                 : "text-neutral-600 hover:bg-neutral-100 hover:text-neutral-900",
             )}
           >

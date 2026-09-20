@@ -60,7 +60,7 @@ export function MobileNav({ slug, tenantName }: { slug: string; tenantName: stri
                   className={cn(
                     "flex min-h-11 items-center gap-3 rounded-xl px-3 py-2.5 text-base font-medium transition-colors",
                     isActive
-                      ? "bg-rose-50 text-rose-700"
+                      ? "bg-rose-500 text-white shadow-sm"
                       : "text-neutral-700 hover:bg-neutral-100 hover:text-neutral-900",
                   )}
                 >

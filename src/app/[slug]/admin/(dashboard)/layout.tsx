@@ -19,16 +19,16 @@ export default async function AdminLayout({
   return (
     <div className="flex min-h-screen bg-neutral-50">
       <aside className="hidden w-64 shrink-0 flex-col border-r border-neutral-200 bg-white md:flex print:hidden">
-        <div className="flex flex-col gap-2 border-b border-neutral-100 px-5 py-5">
+        <div className="flex flex-col gap-3 rounded-br-3xl bg-rose-600 px-5 py-6 shadow-md">
           <div className="flex flex-col gap-0.5">
-            <span className="text-sm font-semibold text-neutral-900">{tenant.name}</span>
-            <span className="text-xs text-neutral-400">Unha Marcada · Painel</span>
+            <span className="text-lg font-bold text-white">{tenant.name}</span>
+            <span className="text-xs text-white/70">Unha Marcada · Painel</span>
           </div>
           <a
             href={`/${slug}/agendar?preview=admin`}
             target="_blank"
             rel="noopener noreferrer"
-            className="flex w-fit items-center gap-1.5 text-xs font-medium text-rose-600 hover:underline"
+            className="flex items-center justify-center gap-1.5 rounded-full border border-white/40 bg-white/10 px-3 py-2 text-xs font-medium text-white transition-colors hover:bg-white/20"
           >
             <Eye className="h-3.5 w-3.5" />
             Ver como cliente
@@ -37,7 +37,7 @@ export default async function AdminLayout({
             href={buildBookingShareLink(tenant.name, bookingUrl)}
             target="_blank"
             rel="noopener noreferrer"
-            className="flex w-fit items-center gap-1.5 text-xs font-medium text-rose-600 hover:underline"
+            className="flex items-center justify-center gap-1.5 rounded-full bg-[#25D366] px-3 py-2 text-xs font-medium text-white shadow-sm transition-colors hover:bg-[#20bd5a]"
           >
             <MessageCircle className="h-3.5 w-3.5" />
             Enviar link de agendamento por WhatsApp
