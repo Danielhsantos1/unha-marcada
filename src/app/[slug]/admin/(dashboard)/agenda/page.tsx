@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { Lock } from "lucide-react";
 import { requireTenantStaff } from "@/lib/admin/auth";
 import { createClient } from "@/lib/supabase/server";
 import { getAgendaRange, type AgendaView } from "@/lib/admin/agenda-range";
@@ -101,11 +102,12 @@ export default async function AgendaPage({
     <div className="flex flex-col gap-5">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <h1 className="text-xl font-semibold text-neutral-900">Agenda</h1>
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-2">
           <Link
             href={`/${slug}/admin/configuracoes`}
-            className="text-xs font-medium text-rose-600 hover:underline"
+            className="flex shrink-0 items-center gap-1.5 rounded-full border border-rose-300 bg-white px-4 py-2 text-sm font-medium text-rose-600 transition-colors hover:bg-rose-50"
           >
+            <Lock className="h-4 w-4" />
             Bloquear horário
           </Link>
           <NewAppointmentDialog slug={slug} services={services ?? []} />
@@ -163,7 +165,7 @@ function DayView({
   blocks: BlockInfo[];
 }) {
   return (
-    <div className="flex flex-col gap-3 rounded-2xl border border-neutral-200 bg-white p-4">
+    <div className="flex flex-col gap-3 rounded-2xl border border-neutral-200 bg-white p-4 shadow-sm">
       <p className="text-sm font-medium text-neutral-700">{formatDateBR(dateISO)}</p>
 
       {isClosed && (
@@ -213,7 +215,7 @@ function WeekView({
   return (
     <div className="grid gap-3 overflow-x-auto sm:grid-cols-2 lg:grid-cols-7">
       {days.map((day) => (
-        <div key={day} className="flex min-w-[160px] flex-col gap-2 rounded-2xl border border-neutral-200 bg-white p-3">
+        <div key={day} className="flex min-w-[160px] flex-col gap-2 rounded-2xl border border-neutral-200 bg-white p-3 shadow-sm">
           <p className="text-xs font-medium capitalize text-neutral-500">
             {format(new Date(`${day}T12:00:00Z`), "EEE, d MMM", { locale: ptBR })}
           </p>
@@ -277,7 +279,7 @@ function MonthView({
             key={day}
             href={`/${slug}/admin/agenda?view=dia&data=${day}`}
             className={cn(
-              "flex min-h-12 flex-col gap-1 rounded-lg border border-neutral-200 bg-white p-1 text-left hover:border-rose-300 sm:min-h-20 sm:rounded-xl sm:p-2",
+              "flex min-h-12 flex-col gap-1 rounded-xl border border-neutral-200 bg-white p-1 text-left shadow-sm transition-colors hover:border-rose-300 sm:min-h-20 sm:p-2",
               !inMonth && "opacity-40",
             )}
           >

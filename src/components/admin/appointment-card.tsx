@@ -28,7 +28,7 @@ export function AppointmentCard({
 
   return (
     <div
-      className={`flex items-center justify-between gap-2 rounded-lg border px-3 py-2 text-xs ${APPOINTMENT_STATUS_COLORS[appointment.status]}`}
+      className={`flex items-center justify-between gap-2 rounded-xl border px-3 py-2 text-xs ${APPOINTMENT_STATUS_COLORS[appointment.status]}`}
     >
       <div className="min-w-0">
         <p className="font-semibold">

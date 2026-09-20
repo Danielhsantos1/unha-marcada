@@ -62,7 +62,7 @@ export default async function PagamentosPage({ params }: { params: Promise<{ slu
       <h1 className="text-xl font-semibold text-neutral-900">Pagamentos</h1>
 
       {rows.length === 0 ? (
-        <p className="rounded-2xl border border-neutral-200 bg-white py-8 text-center text-neutral-400">
+        <p className="rounded-2xl border border-neutral-200 bg-white py-8 text-center text-neutral-400 shadow-sm">
           Nenhum pagamento registrado ainda.
         </p>
       ) : (
@@ -145,7 +145,7 @@ function PaymentCard({
   financialStatus: ReturnType<typeof computeFinancialStatus>;
 }) {
   return (
-    <div className="flex flex-col gap-2 rounded-2xl border border-neutral-200 bg-white p-4">
+    <div className="flex flex-col gap-2 rounded-2xl border border-neutral-200 bg-white p-4 shadow-sm">
       <div className="flex items-start justify-between gap-2">
         <p className="font-medium text-neutral-900">{appointment.client_name}</p>
         <FinancialStatusBadge status={financialStatus} />

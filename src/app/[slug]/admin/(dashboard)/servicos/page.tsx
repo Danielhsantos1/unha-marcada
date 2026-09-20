@@ -9,7 +9,7 @@ import type { Service } from "@/types/database";
 
 function ServiceCard({ slug, service }: { slug: string; service: Service }) {
   return (
-    <div className="flex flex-col gap-2 rounded-2xl border border-neutral-200 bg-white p-4">
+    <div className="flex flex-col gap-2 rounded-2xl border border-neutral-200 bg-white p-4 shadow-sm">
       <div className="flex items-start justify-between gap-2">
         <div>
           <p className="font-medium text-neutral-900">{service.name}</p>
@@ -54,7 +54,7 @@ export default async function ServicosPage({ params }: { params: Promise<{ slug:
       </div>
 
       {(services ?? []).length === 0 ? (
-        <p className="rounded-2xl border border-neutral-200 bg-white py-8 text-center text-neutral-400">
+        <p className="rounded-2xl border border-neutral-200 bg-white py-8 text-center text-neutral-400 shadow-sm">
           Nenhum serviço cadastrado ainda.
         </p>
       ) : (
