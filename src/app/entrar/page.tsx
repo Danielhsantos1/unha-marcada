@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { LogIn } from "lucide-react";
 import { SalonLoginForm } from "@/components/public/salon-login-form";
 
@@ -28,9 +27,14 @@ export default function EntrarPage() {
 
       <p className="text-sm text-neutral-500">
         Ainda não tem conta?{" "}
-        <Link href="/comecar" className="font-medium text-rose-600 hover:underline">
-          Criar meu salão grátis
-        </Link>
+        <a
+          href="https://wa.me/5515996229973?text=Ol%C3%A1!%20Quero%20uma%20demonstra%C3%A7%C3%A3o%20da%20Unha%20Marcada."
+          target="_blank"
+          rel="noopener noreferrer"
+          className="font-medium text-rose-600 hover:underline"
+        >
+          Solicitar uma apresentação
+        </a>
       </p>
     </main>
   );
