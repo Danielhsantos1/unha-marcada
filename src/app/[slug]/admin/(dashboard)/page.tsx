@@ -4,18 +4,16 @@ import {
   DollarSign,
   HandCoins,
   UserPlus,
-  Wallet,
-  CircleDollarSign,
   AlertTriangle,
-  CheckCircle2,
-  Clock,
   Eye,
   MessageCircle,
+  Share2,
+  BarChart3,
+  ChevronRight,
 } from "lucide-react";
 import { requireTenantStaff } from "@/lib/admin/auth";
 import { createClient } from "@/lib/supabase/server";
 import { Card, CardContent } from "@/components/ui/card";
-import { computeFinancialStatus } from "@/lib/payments/financial-status";
 import { formatBRL } from "@/lib/utils";
 import { buildBookingShareLink } from "@/lib/whatsapp";
 import type { AppointmentPaymentSummary, AppointmentStatus } from "@/types/database";
@@ -32,7 +30,6 @@ export default async function AdminDashboardPage({
 
   const today = new Date().toISOString().slice(0, 10);
   const monthStart = `${today.slice(0, 7)}-01`;
-  const monthStartIso = `${monthStart}T00:00:00.000Z`;
 
   const [
     { count: todayCount },
@@ -58,7 +55,7 @@ export default async function AdminDashboardPage({
       .from("payment_transactions")
       .select("appointment_id, type, amount_cents")
       .eq("tenant_id", tenant.id)
-      .gte("recorded_at", monthStartIso)
+      .gte("recorded_at", `${monthStart}T00:00:00.000Z`)
       .returns<{ appointment_id: string; type: string; amount_cents: number }[]>(),
     supabase
       .from("appointments")
@@ -78,27 +75,9 @@ export default async function AdminDashboardPage({
 
   const receitaPrevista = (monthAppointments ?? []).reduce((sum, a) => sum + a.total_price_cents, 0);
 
-  const transactions = monthTransactions ?? [];
-  const sinaisRecebidos = transactions
+  const sinaisRecebidos = (monthTransactions ?? [])
     .filter((t) => t.type === "SINAL")
     .reduce((sum, t) => sum + t.amount_cents, 0);
-  const totalRecebidoMes = transactions.reduce((sum, t) => sum + t.amount_cents, 0);
-
-  const receivedByAppointment = new Map<string, number>();
-  for (const t of transactions) {
-    receivedByAppointment.set(t.appointment_id, (receivedByAppointment.get(t.appointment_id) ?? 0) + t.amount_cents);
-  }
-  let atendimentosQuitadosMes = 0;
-  let atendimentosSaldoPendenteMes = 0;
-  for (const appt of monthAppointments ?? []) {
-    const status = computeFinancialStatus({
-      appointmentStatus: appt.status,
-      totalPriceCents: appt.total_price_cents,
-      amountReceivedCents: receivedByAppointment.get(appt.id) ?? 0,
-    });
-    if (status === "QUITADO") atendimentosQuitadosMes += 1;
-    if (status === "SALDO_PENDENTE") atendimentosSaldoPendenteMes += 1;
-  }
 
   const totalAReceber = (pendingSummaries ?? []).reduce((sum, s) => sum + s.balance_due_cents, 0);
   const quantidadePendencias = (pendingSummaries ?? []).length;
@@ -109,21 +88,14 @@ export default async function AdminDashboardPage({
       firstSeenByPhone.set(appt.client_phone, appt.created_at);
     }
   }
-  const clientesNovas = [...firstSeenByPhone.values()].filter((firstSeen) => firstSeen >= monthStartIso).length;
+  const clientesNovas = [...firstSeenByPhone.values()].filter(
+    (firstSeen) => firstSeen >= `${monthStart}T00:00:00.000Z`,
+  ).length;
 
-  const cards = [
-    { label: "Agendamentos hoje", value: String(todayCount ?? 0), icon: CalendarCheck },
-    { label: "Receita prevista (mês)", value: formatBRL(receitaPrevista), icon: DollarSign },
-    { label: "Sinais recebidos (mês)", value: formatBRL(sinaisRecebidos), icon: HandCoins },
-    { label: "Clientes novas (mês)", value: String(clientesNovas), icon: UserPlus },
-  ];
-
-  const financialCards = [
-    { label: "Total recebido (mês)", value: formatBRL(totalRecebidoMes), icon: Wallet },
-    { label: "Total a receber", value: formatBRL(totalAReceber), icon: CircleDollarSign },
-    { label: "Quantidade de pendências", value: String(quantidadePendencias), icon: AlertTriangle },
-    { label: "Atendimentos quitados (mês)", value: String(atendimentosQuitadosMes), icon: CheckCircle2 },
-    { label: "Saldo pendente (mês)", value: String(atendimentosSaldoPendenteMes), icon: Clock },
+  const resumoMesCards = [
+    { label: "Receita prevista", value: formatBRL(receitaPrevista), icon: DollarSign },
+    { label: "Sinais recebidos", value: formatBRL(sinaisRecebidos), icon: HandCoins },
+    { label: "Clientes novas", value: String(clientesNovas), icon: UserPlus },
   ];
 
   return (
@@ -135,70 +107,115 @@ export default async function AdminDashboardPage({
             href={`/${slug}/agendar?preview=admin`}
             target="_blank"
             rel="noopener noreferrer"
-            className="flex shrink-0 items-center gap-1.5 rounded-full border border-neutral-200 bg-white px-3 py-1.5 text-xs font-medium text-neutral-700 transition-colors hover:bg-neutral-50"
+            className="flex shrink-0 items-center gap-1.5 rounded-full border border-rose-300 bg-white px-4 py-2 text-sm font-medium text-rose-600 transition-colors hover:bg-rose-50"
           >
-            <Eye className="h-3.5 w-3.5" />
+            <Eye className="h-4 w-4" />
             Ver como cliente
           </a>
           <a
             href={buildBookingShareLink(tenant.name, bookingUrl)}
             target="_blank"
             rel="noopener noreferrer"
-            className="flex shrink-0 items-center gap-1.5 rounded-full border border-neutral-200 bg-white px-3 py-1.5 text-xs font-medium text-neutral-700 transition-colors hover:bg-neutral-50"
+            className="flex shrink-0 items-center gap-1.5 rounded-full bg-[#25D366] px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-[#20bd5a]"
           >
-            <MessageCircle className="h-3.5 w-3.5" />
-            Enviar agendamento por WhatsApp
+            <MessageCircle className="h-4 w-4" />
+            Enviar link de agendamento por WhatsApp
           </a>
         </div>
       </div>
 
       {quantidadePendencias > 0 && (
-        <Link
-          href={`/${slug}/admin/contas-a-receber`}
-          className="flex items-center justify-between gap-3 rounded-2xl border border-amber-300 bg-amber-50 px-4 py-3 text-amber-800 transition-colors hover:bg-amber-100"
-        >
-          <span className="flex items-center gap-2 text-sm font-medium">
-            <AlertTriangle className="h-4 w-4 shrink-0" />
-            {quantidadePendencias} {quantidadePendencias === 1 ? "atendimento já realizado" : "atendimentos já realizados"}{" "}
-            com saldo pendente — {formatBRL(totalAReceber)} pra cobrar.
-          </span>
-          <span className="shrink-0 text-xs font-semibold underline">Ver Contas a Receber</span>
-        </Link>
+        <div className="flex flex-col gap-3 rounded-2xl bg-amber-50 p-4">
+          <div className="flex items-start gap-3">
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-amber-100 text-amber-700">
+              <AlertTriangle className="h-5 w-5" />
+            </span>
+            <div>
+              <p className="font-semibold text-amber-900">
+                Você tem {formatBRL(totalAReceber)} para receber
+              </p>
+              <p className="text-sm text-amber-700">
+                {quantidadePendencias} {quantidadePendencias === 1 ? "atendimento realizado" : "atendimentos realizados"}{" "}
+                com saldo pendente
+              </p>
+            </div>
+          </div>
+          <div className="flex flex-wrap items-center gap-4">
+            <Link
+              href={`/${slug}/admin/contas-a-receber`}
+              className="rounded-full bg-amber-500 px-4 py-2 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-amber-600"
+            >
+              Cobrar agora
+            </Link>
+            <Link
+              href={`/${slug}/admin/contas-a-receber`}
+              className="text-sm font-semibold text-amber-800 underline underline-offset-2"
+            >
+              Ver Contas a Receber
+            </Link>
+          </div>
+        </div>
       )}
 
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        {cards.map(({ label, value, icon: Icon }) => (
-          <Card key={label}>
-            <CardContent className="flex items-center gap-4 p-5">
-              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-rose-50 text-rose-600">
-                <Icon className="h-5 w-5" />
-              </span>
-              <div>
-                <p className="text-xs text-neutral-500">{label}</p>
-                <p className="text-lg font-semibold text-neutral-900">{value}</p>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
+      <div className="flex flex-col gap-3 rounded-2xl border border-neutral-200 bg-white p-5 shadow-sm">
+        <div className="flex items-center justify-between gap-2">
+          <div className="flex items-center gap-3">
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-rose-100 text-rose-600">
+              <CalendarCheck className="h-5 w-5" />
+            </span>
+            <span className="font-semibold text-neutral-900">Hoje</span>
+          </div>
+          <a
+            href={buildBookingShareLink(tenant.name, bookingUrl)}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-1 text-sm font-medium text-rose-600 hover:underline"
+          >
+            <Share2 className="h-3.5 w-3.5" />
+            Divulgar agenda
+          </a>
+        </div>
+        <p className="text-3xl font-bold text-neutral-900">
+          {todayCount ?? 0} {(todayCount ?? 0) === 1 ? "agendamento" : "agendamentos"}
+        </p>
+        <p className="text-sm text-neutral-400">
+          {(todayCount ?? 0) === 0
+            ? "Nenhum horário marcado hoje."
+            : "Confira os detalhes na Agenda."}
+        </p>
       </div>
 
       <div>
-        <h2 className="mb-3 text-sm font-semibold text-neutral-900">Financeiro</h2>
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
-          {financialCards.map(({ label, value, icon: Icon }) => (
+        <h2 className="mb-3 text-sm font-semibold text-neutral-900">Resumo do mês</h2>
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+          {resumoMesCards.map(({ label, value, icon: Icon }) => (
             <Card key={label}>
-              <CardContent className="flex items-center gap-4 p-5">
-                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-rose-50 text-rose-600">
+              <CardContent className="flex flex-col items-center gap-2 p-5 text-center">
+                <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-rose-100 text-rose-600">
                   <Icon className="h-5 w-5" />
                 </span>
-                <div>
-                  <p className="text-xs text-neutral-500">{label}</p>
-                  <p className="text-lg font-semibold text-neutral-900">{value}</p>
-                </div>
+                <p className="text-xs text-neutral-500">{label}</p>
+                <p className="text-lg font-bold text-neutral-900">{value}</p>
               </CardContent>
             </Card>
           ))}
         </div>
+      </div>
+
+      <div>
+        <h2 className="mb-3 text-sm font-semibold text-neutral-900">Financeiro</h2>
+        <Link
+          href={`/${slug}/admin/relatorios`}
+          className="flex items-center gap-3 rounded-2xl border border-neutral-200 bg-white p-4 shadow-sm transition-colors hover:bg-neutral-50"
+        >
+          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-rose-100 text-rose-600">
+            <BarChart3 className="h-5 w-5" />
+          </span>
+          <span className="flex-1 text-sm font-medium text-neutral-900">
+            Relatórios e transações financeiras
+          </span>
+          <ChevronRight className="h-4 w-4 shrink-0 text-neutral-400" />
+        </Link>
       </div>
     </div>
   );

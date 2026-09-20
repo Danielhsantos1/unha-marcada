@@ -40,7 +40,7 @@ export default async function AdminLayout({
             className="flex w-fit items-center gap-1.5 text-xs font-medium text-rose-600 hover:underline"
           >
             <MessageCircle className="h-3.5 w-3.5" />
-            Enviar agendamento por WhatsApp
+            Enviar link de agendamento por WhatsApp
           </a>
         </div>
         <AdminNav slug={slug} className="flex flex-1 flex-col gap-1 p-3" />
@@ -51,12 +51,12 @@ export default async function AdminLayout({
       </aside>
 
       <div className="flex min-w-0 flex-1 flex-col">
-        <header className="flex items-center justify-between gap-2 border-b border-neutral-200 bg-white px-2 py-2 md:hidden print:hidden">
+        <header className="flex items-center justify-between gap-2 rounded-b-3xl bg-rose-600 px-4 py-4 shadow-md md:hidden print:hidden">
           <div className="flex min-w-0 flex-1 items-center gap-1">
             <MobileNav slug={slug} tenantName={tenant.name} />
-            <span className="truncate text-sm font-semibold text-neutral-900">{tenant.name}</span>
+            <span className="truncate text-lg font-bold text-white">{tenant.name}</span>
           </div>
-          <LogoutButton slug={slug} className="shrink-0" />
+          <LogoutButton slug={slug} className="shrink-0 text-white hover:bg-white/10 hover:text-white" />
         </header>
 
         <main className="min-w-0 flex-1 p-4 sm:p-6 print:p-0">{children}</main>
