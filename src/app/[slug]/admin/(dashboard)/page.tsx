@@ -125,16 +125,16 @@ export default async function AdminDashboardPage({
       </div>
 
       {quantidadePendencias > 0 && (
-        <div className="flex flex-col gap-3 rounded-2xl bg-amber-50 p-4">
+        <div className="flex flex-col gap-3 rounded-2xl bg-orange-50 p-4">
           <div className="flex items-start gap-3">
-            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-amber-100 text-amber-700">
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-orange-100 text-orange-700">
               <AlertTriangle className="h-5 w-5" />
             </span>
             <div>
-              <p className="font-semibold text-amber-900">
+              <p className="font-semibold text-orange-900">
                 Você tem {formatBRL(totalAReceber)} para receber
               </p>
-              <p className="text-sm text-amber-700">
+              <p className="text-sm text-orange-700">
                 {quantidadePendencias} {quantidadePendencias === 1 ? "atendimento realizado" : "atendimentos realizados"}{" "}
                 com saldo pendente
               </p>
@@ -143,13 +143,13 @@ export default async function AdminDashboardPage({
           <div className="flex flex-wrap items-center gap-4">
             <Link
               href={`/${slug}/admin/contas-a-receber`}
-              className="rounded-full bg-amber-500 px-4 py-2 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-amber-600"
+              className="rounded-full bg-orange-400 px-4 py-2 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-orange-500"
             >
               Cobrar agora
             </Link>
             <Link
               href={`/${slug}/admin/contas-a-receber`}
-              className="text-sm font-semibold text-amber-800 underline underline-offset-2"
+              className="text-sm font-semibold text-orange-800 underline underline-offset-2"
             >
               Ver Contas a Receber
             </Link>
@@ -157,65 +157,67 @@ export default async function AdminDashboardPage({
         </div>
       )}
 
-      <div className="flex flex-col gap-3 rounded-2xl border border-neutral-200 bg-white p-5 shadow-sm">
-        <div className="flex items-center justify-between gap-2">
-          <div className="flex items-center gap-3">
-            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-rose-100 text-rose-600">
-              <CalendarCheck className="h-5 w-5" />
-            </span>
-            <span className="font-semibold text-neutral-900">Hoje</span>
+      <div className="grid gap-4 lg:grid-cols-2 lg:gap-6">
+        <div className="flex flex-col gap-3 rounded-2xl border border-neutral-200 bg-white p-5 shadow-sm lg:col-start-1 lg:row-start-1">
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex items-center gap-3">
+              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-rose-100 text-rose-600">
+                <CalendarCheck className="h-5 w-5" />
+              </span>
+              <span className="font-semibold text-neutral-900">Hoje</span>
+            </div>
+            <a
+              href={buildBookingShareLink(tenant.name, bookingUrl)}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-1 text-sm font-medium text-rose-600 hover:underline"
+            >
+              <Share2 className="h-3.5 w-3.5" />
+              Divulgar agenda
+            </a>
           </div>
-          <a
-            href={buildBookingShareLink(tenant.name, bookingUrl)}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex items-center gap-1 text-sm font-medium text-rose-600 hover:underline"
+          <p className="text-3xl font-bold text-neutral-900">
+            {todayCount ?? 0} {(todayCount ?? 0) === 1 ? "agendamento" : "agendamentos"}
+          </p>
+          <p className="text-sm text-neutral-400">
+            {(todayCount ?? 0) === 0
+              ? "Nenhum horário marcado hoje."
+              : "Confira os detalhes na Agenda."}
+          </p>
+        </div>
+
+        <div className="lg:col-start-2 lg:row-start-1">
+          <h2 className="mb-3 text-sm font-semibold text-neutral-900">Financeiro</h2>
+          <Link
+            href={`/${slug}/admin/relatorios`}
+            className="flex items-center gap-3 rounded-2xl border border-neutral-200 bg-white p-4 shadow-sm transition-colors hover:bg-neutral-50"
           >
-            <Share2 className="h-3.5 w-3.5" />
-            Divulgar agenda
-          </a>
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-rose-100 text-rose-600">
+              <BarChart3 className="h-5 w-5" />
+            </span>
+            <span className="flex-1 text-sm font-medium text-neutral-900">
+              Relatórios e transações financeiras
+            </span>
+            <ChevronRight className="h-4 w-4 shrink-0 text-neutral-400" />
+          </Link>
         </div>
-        <p className="text-3xl font-bold text-neutral-900">
-          {todayCount ?? 0} {(todayCount ?? 0) === 1 ? "agendamento" : "agendamentos"}
-        </p>
-        <p className="text-sm text-neutral-400">
-          {(todayCount ?? 0) === 0
-            ? "Nenhum horário marcado hoje."
-            : "Confira os detalhes na Agenda."}
-        </p>
-      </div>
 
-      <div>
-        <h2 className="mb-3 text-sm font-semibold text-neutral-900">Resumo do mês</h2>
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-          {resumoMesCards.map(({ label, value, icon: Icon }) => (
-            <Card key={label}>
-              <CardContent className="flex flex-col items-center gap-2 p-5 text-center">
-                <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-rose-100 text-rose-600">
-                  <Icon className="h-5 w-5" />
-                </span>
-                <p className="text-xs text-neutral-500">{label}</p>
-                <p className="text-lg font-bold text-neutral-900">{value}</p>
-              </CardContent>
-            </Card>
-          ))}
+        <div className="lg:col-span-2 lg:row-start-2">
+          <h2 className="mb-3 text-sm font-semibold text-neutral-900">Resumo do mês</h2>
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+            {resumoMesCards.map(({ label, value, icon: Icon }) => (
+              <Card key={label}>
+                <CardContent className="flex flex-col items-center gap-2 p-5 text-center">
+                  <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-rose-100 text-rose-600">
+                    <Icon className="h-5 w-5" />
+                  </span>
+                  <p className="text-xs text-neutral-500">{label}</p>
+                  <p className="text-lg font-bold text-neutral-900">{value}</p>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
         </div>
-      </div>
-
-      <div>
-        <h2 className="mb-3 text-sm font-semibold text-neutral-900">Financeiro</h2>
-        <Link
-          href={`/${slug}/admin/relatorios`}
-          className="flex items-center gap-3 rounded-2xl border border-neutral-200 bg-white p-4 shadow-sm transition-colors hover:bg-neutral-50"
-        >
-          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-rose-100 text-rose-600">
-            <BarChart3 className="h-5 w-5" />
-          </span>
-          <span className="flex-1 text-sm font-medium text-neutral-900">
-            Relatórios e transações financeiras
-          </span>
-          <ChevronRight className="h-4 w-4 shrink-0 text-neutral-400" />
-        </Link>
       </div>
     </div>
   );

@@ -51,7 +51,7 @@ export default async function AdminLayout({
       </aside>
 
       <div className="flex min-w-0 flex-1 flex-col">
-        <header className="flex items-center justify-between gap-2 rounded-b-3xl bg-rose-600 px-4 py-4 shadow-md md:hidden print:hidden">
+        <header className="sticky top-0 z-50 flex transform-gpu items-center justify-between gap-2 rounded-b-3xl bg-rose-600 px-4 py-4 shadow-md backface-hidden will-change-transform md:hidden print:hidden">
           <div className="flex min-w-0 flex-1 items-center gap-1">
             <MobileNav slug={slug} tenantName={tenant.name} />
             <span className="truncate text-lg font-bold text-white">{tenant.name}</span>
