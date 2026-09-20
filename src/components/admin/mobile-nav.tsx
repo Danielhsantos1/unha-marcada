@@ -20,7 +20,7 @@ export function MobileNav({ slug, tenantName }: { slug: string; tenantName: stri
         <button
           type="button"
           aria-label="Abrir menu"
-          className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl text-neutral-600 hover:bg-neutral-100"
+          className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl text-white hover:bg-white/10"
         >
           <Menu className="h-6 w-6" />
         </button>
@@ -47,7 +47,7 @@ export function MobileNav({ slug, tenantName }: { slug: string; tenantName: stri
             className="flex w-fit items-center gap-1.5 text-xs font-medium text-rose-600 hover:underline"
           >
             <MessageCircle className="h-3.5 w-3.5" />
-            Enviar agendamento por WhatsApp
+            Enviar link de agendamento por WhatsApp
           </a>
         </div>
         <nav className="flex flex-1 flex-col gap-1">
