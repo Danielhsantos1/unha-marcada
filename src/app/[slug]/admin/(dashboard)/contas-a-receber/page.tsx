@@ -60,7 +60,7 @@ export default async function ContasAReceberPage({ params }: { params: Promise<{
       </div>
 
       {rows.length === 0 ? (
-        <p className="rounded-2xl border border-neutral-200 bg-white py-8 text-center text-neutral-400">
+        <p className="rounded-2xl border border-neutral-200 bg-white py-8 text-center text-neutral-400 shadow-sm">
           Nenhuma pendência — tudo cobrado. 🎉
         </p>
       ) : (
@@ -76,7 +76,7 @@ export default async function ContasAReceberPage({ params }: { params: Promise<{
               <div
                 key={appointment.id}
                 className={cn(
-                  "flex flex-col gap-2 rounded-2xl border bg-white p-4 sm:flex-row sm:items-center sm:justify-between",
+                  "flex flex-col gap-2 rounded-2xl border bg-white p-4 shadow-sm sm:flex-row sm:items-center sm:justify-between",
                   isOld ? "border-red-300 bg-red-50/40" : "border-neutral-200",
                 )}
               >

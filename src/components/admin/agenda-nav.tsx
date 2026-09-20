@@ -22,7 +22,7 @@ export function AgendaNav({
 
   return (
     <div className="flex flex-wrap items-center justify-between gap-3">
-      <div className="flex items-center gap-1 rounded-xl border border-neutral-200 bg-white p-1">
+      <div className="flex items-center gap-1 rounded-xl border border-neutral-200 bg-white p-1 shadow-sm">
         {(Object.keys(VIEW_LABELS) as AgendaView[]).map((v) => (
           <Link
             key={v}
