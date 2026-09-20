@@ -11,12 +11,11 @@ export default function HomePage() {
         Unha Marcada
       </p>
       <h1 className="text-3xl font-semibold text-neutral-900 sm:text-4xl">
-        Plataforma de agendamento para manicures e pedicures
+        Chega de agendar pelo WhatsApp
       </h1>
       <p className="max-w-xl text-neutral-500">
-        Cada salão tem sua própria página pública de agendamento. Este é um projeto
-        multi-tenant: acesse a página de um salão pelo respectivo endereço, por
-        exemplo, a demonstração abaixo.
+        Crie o link do seu salão e deixe suas clientes marcarem horário sozinhas,
+        24h por dia. Veja na prática como funciona.
       </p>
       <div className="flex flex-col items-center gap-3 sm:flex-row">
         <a
