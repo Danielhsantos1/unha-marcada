@@ -1,6 +1,6 @@
 import { ImageResponse } from "next/og";
 
-const GRADIENT = "linear-gradient(135deg, #b18ae0 0%, #8a56cb 55%, #5f3690 100%)";
+const GRADIENT = "linear-gradient(135deg, #a78bfa 0%, #7c5cfc 55%, #5b21b6 100%)";
 
 // A closed nail-polish-drop silhouette — reads as "Unha Marcada" at a
 // glance instead of a generic letter mark.
