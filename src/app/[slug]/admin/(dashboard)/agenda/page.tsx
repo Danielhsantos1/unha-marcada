@@ -7,9 +7,9 @@ import { createClient } from "@/lib/supabase/server";
 import { getAgendaRange, type AgendaView } from "@/lib/admin/agenda-range";
 import { AgendaNav } from "@/components/admin/agenda-nav";
 import { AgendaFilterableView, type FlatBlock } from "@/components/admin/agenda-filterable-view";
+import { AgendaMonthView } from "@/components/admin/agenda-month-view";
 import type { AgendaAppointment } from "@/components/admin/appointment-card";
 import { NewAppointmentDialog } from "@/components/admin/new-appointment-dialog";
-import { cn, formatTimeBR } from "@/lib/utils";
 import type { Service } from "@/types/database";
 
 function isValidView(value: string | undefined): value is AgendaView {
@@ -114,13 +114,6 @@ export default async function AgendaPage({
     list.map((block) => ({ ...block, date })),
   );
 
-  const appointmentsByDate = new Map<string, (AgendaAppointment & { appointment_date: string })[]>();
-  for (const appt of flatAppointments) {
-    const list = appointmentsByDate.get(appt.appointment_date) ?? [];
-    list.push(appt);
-    appointmentsByDate.set(appt.appointment_date, list);
-  }
-
   return (
     <div className="flex flex-col gap-5">
       <div className="flex flex-wrap items-center justify-between gap-2">
@@ -156,84 +149,17 @@ export default async function AgendaPage({
       )}
 
       {view === "mes" && (
-        <MonthView
+        <AgendaMonthView
           slug={slug}
           days={range.days}
-          referenceDateISO={referenceDateISO}
-          appointmentsByDate={appointmentsByDate}
-          blocksByDate={blocksByDate}
-          isDateClosed={isDateClosed}
+          referenceMonth={referenceDateISO.slice(0, 7)}
+          todayISO={todayISO}
+          initialSelectedISO={referenceDateISO}
+          appointments={flatAppointments}
+          blocks={flatBlocks}
+          closedDays={closedDays}
         />
       )}
-    </div>
-  );
-}
-
-function MonthView({
-  slug,
-  days,
-  referenceDateISO,
-  appointmentsByDate,
-  blocksByDate,
-  isDateClosed,
-}: {
-  slug: string;
-  days: string[];
-  referenceDateISO: string;
-  appointmentsByDate: Map<string, (AgendaAppointment & { appointment_date: string })[]>;
-  blocksByDate: Map<string, BlockInfo[]>;
-  isDateClosed: (dateISO: string) => boolean;
-}) {
-  const currentMonth = referenceDateISO.slice(0, 7);
-
-  return (
-    <div className="grid grid-cols-7 gap-1 sm:gap-2">
-      {["Seg", "Ter", "Qua", "Qui", "Sex", "Sáb", "Dom"].map((label) => (
-        <div key={label} className="text-center text-[10px] font-medium text-neutral-400 sm:text-xs">
-          {label}
-        </div>
-      ))}
-
-      {days.map((day) => {
-        const inMonth = day.slice(0, 7) === currentMonth;
-        const dayAppointments = appointmentsByDate.get(day) ?? [];
-        const dayNumber = Number(day.slice(8, 10));
-
-        return (
-          <Link
-            key={day}
-            href={`/${slug}/admin/agenda?view=dia&data=${day}`}
-            className={cn(
-              "flex min-h-12 flex-col gap-1 rounded-xl border border-neutral-200 bg-white p-1 text-left shadow-sm transition-colors hover:border-rose-300 sm:min-h-20 sm:p-2",
-              !inMonth && "opacity-40",
-            )}
-          >
-            <div className="flex items-center justify-between">
-              <span className="text-[11px] font-medium text-neutral-700 sm:text-xs">{dayNumber}</span>
-              {isDateClosed(day) && <span className="h-1.5 w-1.5 rounded-full bg-neutral-400" />}
-              {!isDateClosed(day) && (blocksByDate.get(day) ?? []).length > 0 && (
-                <span className="h-1.5 w-1.5 rounded-full bg-amber-400" />
-              )}
-            </div>
-
-            {/* Phones: just a dot so the day stays tappable and legible — the full list only fits from sm: up. */}
-            {dayAppointments.length > 0 && (
-              <span className="h-1.5 w-1.5 rounded-full bg-rose-400 sm:hidden" />
-            )}
-
-            <div className="hidden flex-col gap-0.5 sm:flex">
-              {dayAppointments.slice(0, 3).map((appt) => (
-                <span key={appt.id} className="truncate text-[10px] text-neutral-500">
-                  {formatTimeBR(appt.start_time)} {appt.client_name}
-                </span>
-              ))}
-              {dayAppointments.length > 3 && (
-                <span className="text-[10px] text-rose-500">+{dayAppointments.length - 3} mais</span>
-              )}
-            </div>
-          </Link>
-        );
-      })}
     </div>
   );
 }
