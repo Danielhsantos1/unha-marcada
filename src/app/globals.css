@@ -50,6 +50,14 @@
 
 html {
   background: var(--background);
+  /* Evita o "pull to refresh"/bounce elástico do navegador no topo da
+     página. Sem isso, um header com `position: sticky` promovido a
+     camada própria de composição (`transform-gpu`, usado no header
+     mobile pra evitar o bug de listras no Android) fica parado
+     exatamente no topo durante esse gesto enquanto o resto do
+     documento estica pra baixo — o resultado visível é um vão em
+     branco entre o header e o conteúdo até o bounce voltar ao lugar. */
+  overscroll-behavior-y: none;
 }
 
 body {
@@ -77,4 +85,5 @@ body {
      (como o header do admin) para de grudar, porque ele fica esperando
      rolagem num container que nunca rola. */
   overflow-x: hidden;
+  overscroll-behavior-y: none;
 }
